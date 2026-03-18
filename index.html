@@ -184,6 +184,7 @@
             { key: 'completeness', label: 'Completeness', group: 'Quality', width: 100, format: 'percent' },
             { key: 'needs_review', label: 'Needs Review', group: 'Review', width: 90, format: 'boolean' },
             { key: 'review_notes', label: 'Review Notes', group: 'Review', width: 180 },
+            { key: 'enrichment_status', label: 'Enrichment Status', group: 'Quality', width: 120 },
             { key: 'created_at', label: 'Created', group: 'Dates', width: 140, format: 'date' },
             { key: 'updated_at', label: 'Updated', group: 'Dates', width: 140, format: 'date' },
         ];
@@ -238,12 +239,13 @@
             { key: 'completeness', label: 'Completeness', group: 'Data', width: 100, format: 'percent' },
             { key: 'needs_review', label: 'Needs Review', group: 'Data', width: 90, format: 'boolean' },
             { key: 'review_notes', label: 'Review Notes', group: 'Data', width: 180 },
+            { key: 'enrichment_status', label: 'Enrichment Status', group: 'Data', width: 120 },
             { key: 'created_at', label: 'Created', group: 'Data', width: 140, format: 'date' },
             { key: 'updated_at', label: 'Updated', group: 'Data', width: 140, format: 'date' },
         ];
 
-        const DEFAULT_VISIBLE = ['name', 'producer', 'wine_type', 'country', 'vintage', 'grape_variety', 'rating', 'price', 'completeness', 'alcohol'];
-        const DEFAULT_VINEYARD_VISIBLE = ['name', 'country', 'region', 'producer_type', 'grape_varieties', 'vineyard_hectares', 'avg_rating', 'farming_practice', 'quality_tier', 'completeness'];
+        const DEFAULT_VISIBLE = ['name', 'producer', 'wine_type', 'country', 'vintage', 'grape_variety', 'rating', 'price', 'completeness', 'alcohol', 'enrichment_status'];
+        const DEFAULT_VINEYARD_VISIBLE = ['name', 'country', 'region', 'producer_type', 'grape_varieties', 'vineyard_hectares', 'avg_rating', 'farming_practice', 'quality_tier', 'completeness', 'enrichment_status'];
 
         function getColumnConfig(storageKey) {
             if (!storageKey) storageKey = 'vinosomm_columns';
@@ -317,7 +319,7 @@
             const [selected, setSelected] = useState(function() {
                 const s = new Set();
                 if (detectedData && detectedData.items) {
-                    detectedData.items.forEach(function(item) { s.add(item); });
+                    detectedData.items.forEach(function(item) { s.add(typeof item === 'string' ? item : item.name); });
                 }
                 return s;
             });
@@ -333,7 +335,7 @@
             const handleSelectAll = function() {
                 const s = new Set();
                 if (detectedData && detectedData.items) {
-                    detectedData.items.forEach(function(item) { s.add(item); });
+                    detectedData.items.forEach(function(item) { s.add(typeof item === 'string' ? item : item.name); });
                 }
                 setSelected(s);
             };
@@ -344,9 +346,13 @@
 
             const handleConfirm = function() {
                 setConfirming(true);
+                const itemsToSend = Array.from(selected).map(function(name) {
+                    const item = detectedData.items.find(function(i) { return (typeof i === 'string' ? i : i.name) === name; });
+                    return item;
+                });
                 api('/ai-intake/confirm', {
                     method: 'POST',
-                    body: JSON.stringify({ items: Array.from(selected), entity_type: entityType })
+                    body: JSON.stringify({ items: itemsToSend, entity_type: entityType })
                 }).then(function() {
                     showToast('Items added successfully', 'success');
                     onConfirm();
@@ -373,15 +379,22 @@
                             <div className="ai-intake-list">
                                 {detectedData && detectedData.items && detectedData.items.length > 0 ? (
                                     detectedData.items.map(function(item) {
+                                        const itemName = typeof item === 'string' ? item : item.name;
+                                        const itemUrl = typeof item === 'object' ? item.website_url : null;
                                         return (
-                                            <div key={item} className="ai-intake-item">
+                                            <div key={itemName} className="ai-intake-item">
                                                 <input
                                                     type="checkbox"
                                                     className="ai-intake-checkbox"
-                                                    checked={selected.has(item)}
-                                                    onChange={function() { handleToggle(item); }}
+                                                    checked={selected.has(itemName)}
+                                                    onChange={function() { handleToggle(itemName); }}
                                                 />
-                                                <div className="ai-intake-label">{item}</div>
+                                                <div className="ai-intake-label" style={{ flex: 1 }}>
+                                                    {itemName}
+                                                    {itemUrl && (
+                                                        <a href={itemUrl} target="_blank" rel="noopener noreferrer" style={{ marginLeft: 8, color: '#0a84ff', textDecoration: 'none', fontSize: '12px' }}>🔗</a>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })
@@ -953,12 +966,26 @@
                                         return (
                                             <tr key={wine.id} onClick={function(){ setDetailWine(wine); }} style={{ cursor: 'pointer' }}>
                                                 {visibleCols.map(function(col) {
+                                                    let cellContent = null;
+                                                    if (col.key === 'enrichment_status') {
+                                                        const status = wine.enrichment_status || 'none';
+                                                        let badgeClass = 'badge-gray';
+                                                        let badgeText = 'No data';
+                                                        if (status === 'queued') { badgeClass = 'badge-blue'; badgeText = 'Queued'; }
+                                                        else if (status === 'enriching') { badgeClass = 'badge-yellow'; badgeText = 'Enriching...'; }
+                                                        else if (status === 'enriched') { badgeClass = 'badge-green'; const pct = wine.completeness; badgeText = 'Enriched ' + (pct ? Math.round(pct) + '%' : ''); }
+                                                        else if (status === 'failed') { badgeClass = 'badge-red'; badgeText = 'Failed'; }
+                                                        cellContent = <span className={'badge ' + badgeClass}>{badgeText}</span>;
+                                                    } else {
+                                                        cellContent = formatCell(wine[col.key], col.format);
+                                                    }
                                                     return (
                                                         <td key={col.key} style={{ maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                            {formatCell(wine[col.key], col.format)}</td>
+                                                            {cellContent}</td>
                                                     );
                                                 })}
                                                 <td onClick={function(e){ e.stopPropagation(); }} style={{ whiteSpace: 'nowrap' }}>
+                                                    <button className="btn btn-sm btn-success" onClick={function() { const status = wine.enrichment_status; if (status === 'none' || status === 'failed') { setLoading(true); api('/admin/api/enrich/' + wine.id, { method: 'POST' }).then(function() { showToast('Enrichment started', 'success'); loadWines(); }).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); }); } else { showToast('Enrichment already in progress or completed', 'info'); } }} style={{ marginRight: 4 }}>Enrich</button>
                                                     <button className="btn btn-sm btn-secondary" onClick={function(){ setEditWine(wine); setShowEdit(true); }} style={{ marginRight: 4 }}>Edit</button>
                                                     <button className="btn btn-sm btn-danger" onClick={function(){ if (confirm('Delete this wine?')) { api('/wines/' + wine.id, { method: 'DELETE' }).then(function() { loadWines(); showToast('Wine deleted', 'success'); }).catch(function(e) { showToast(e.message, 'error'); }); } }}>Delete</button>
                                                 </td>
@@ -1098,12 +1125,26 @@
                                         return (
                                             <tr key={vineyard.id} onClick={function(){ setDetailVineyard(vineyard); }} style={{ cursor: 'pointer' }}>
                                                 {visibleCols.map(function(col) {
+                                                    let cellContent = null;
+                                                    if (col.key === 'enrichment_status') {
+                                                        const status = vineyard.enrichment_status || 'none';
+                                                        let badgeClass = 'badge-gray';
+                                                        let badgeText = 'No data';
+                                                        if (status === 'queued') { badgeClass = 'badge-blue'; badgeText = 'Queued'; }
+                                                        else if (status === 'enriching') { badgeClass = 'badge-yellow'; badgeText = 'Enriching...'; }
+                                                        else if (status === 'enriched') { badgeClass = 'badge-green'; const pct = vineyard.completeness; badgeText = 'Enriched ' + (pct ? Math.round(pct) + '%' : ''); }
+                                                        else if (status === 'failed') { badgeClass = 'badge-red'; badgeText = 'Failed'; }
+                                                        cellContent = <span className={'badge ' + badgeClass}>{badgeText}</span>;
+                                                    } else {
+                                                        cellContent = formatCell(vineyard[col.key], col.format);
+                                                    }
                                                     return (
                                                         <td key={col.key} style={{ maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                            {formatCell(vineyard[col.key], col.format)}</td>
+                                                            {cellContent}</td>
                                                     );
                                                 })}
                                                 <td onClick={function(e){ e.stopPropagation(); }} style={{ whiteSpace: 'nowrap' }}>
+                                                    <button className="btn btn-sm btn-success" onClick={function() { const status = vineyard.enrichment_status; if (status === 'none' || status === 'failed') { setLoading(true); api('/admin/api/vineyards/' + vineyard.id + '/enrich', { method: 'POST' }).then(function() { showToast('Enrichment started', 'success'); loadVineyards(); }).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); }); } else { showToast('Enrichment already in progress or completed', 'info'); } }} style={{ marginRight: 4 }}>Enrich</button>
                                                     <button className="btn btn-sm btn-secondary" onClick={function(){ setEditVineyard(vineyard); setShowEdit(true); }} style={{ marginRight: 4 }}>Edit</button>
                                                     <button className="btn btn-sm btn-danger" onClick={function(){ if (confirm('Delete this vineyard?')) { api('/vineyards/' + vineyard.id, { method: 'DELETE' }).then(function() { loadVineyards(); showToast('Vineyard deleted', 'success'); }).catch(function(e) { showToast(e.message, 'error'); }); } }}>Delete</button>
                                                 </td>
@@ -1153,7 +1194,7 @@
             { id: 'vineyards', label: 'Vineyards', icon: '\ud83c\udf3d' },
             { id: 'tasks', label: 'Tasks', icon: '\ud83d\udccb' },
             { id: 'review', label: 'Review', icon: '\u2705' },
-            { id: 'crawler', label: 'Crawler', icon: '\ud83d\udd0d' },
+            { id: 'crawler', label: 'Scheduler', icon: '\ud83d\udd0d' },
             { id: 'chat', label: 'Chat', icon: '\ud83d\udde3' },
             { id: 'analytics', label: 'Analytics', icon: '\ud83d\udcc9' },
             { id: 'health', label: 'Health', icon: '\ud83d\udcab' },
