@@ -3,758 +3,558 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>vinosomm.ai Admin</title>
+    <title>vinosomm.ai Admin Panel</title>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/prop-types@15/prop-types.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', system-ui, sans-serif; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #111; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; color: #e5e5ea; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        .card { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 12px; padding: 16px; }
-        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.85; }
+        input, select, textarea, button { font-family: inherit; }
+        .card { background: #1c1c1e; border-radius: 12px; padding: 16px; }
+        .stat-card { background: #1c1c1e; border-radius: 12px; padding: 20px; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+        .badge-green { background: rgba(52,211,153,.2); color: #34d399; }
+        .badge-yellow { background: rgba(251,146,60,.2); color: #fb923c; }
+        .badge-red { background: rgba(239,68,68,.2); color: #ef4444; }
+        .badge-blue { background: rgba(10,132,255,.2); color: #0a84ff; }
+        .badge-gray { background: rgba(142,142,147,.2); color: #8e8e93; }
+        .btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
         .btn-primary { background: #0a84ff; color: #fff; }
-        .btn-danger { background: #ff453a; color: #fff; }
-        .btn-secondary { background: #2c2c2e; color: #fff; }
-        .btn-success { background: #30d158; color: #fff; }
-        .btn-warning { background: #ff9f0a; color: #000; }
-        input, select, textarea { background: #2c2c2e; border: 1px solid #3a3a3c; color: #fff; border-radius: 8px; padding: 8px 12px; font-size: 14px; width: 100%; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #0a84ff; }
+        .btn-primary:hover:not(:disabled) { background: #0071e3; }
+        .btn-secondary { background: rgba(255,255,255,.1); color: #fff; }
+        .btn-secondary:hover:not(:disabled) { background: rgba(255,255,255,.15); }
+        .btn-danger { background: rgba(239,68,68,.2); color: #ef4444; }
+        .btn-danger:hover:not(:disabled) { background: rgba(239,68,68,.3); }
+        .btn-success { background: rgba(52,211,153,.2); color: #34d399; }
+        .btn-success:hover:not(:disabled) { background: rgba(52,211,153,.3); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .input { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15); border-radius: 8px; padding: 8px 12px; color: #fff; font-size: 13px; width: 100%; transition: border-color .15s; }
+        .input:focus { outline: none; border-color: #0a84ff; background: rgba(255,255,255,.12); }
+        .input::placeholder { color: #636366; }
+        select.input { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238e8e93' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+        textarea.input { resize: vertical; min-height: 60px; }
+        .label { display: block; font-size: 12px; font-weight: 500; color: #8e8e93; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 12px; color: #8e8e93; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #2c2c2e; }
-        td { padding: 10px 12px; border-bottom: 1px solid #1c1c1e; font-size: 14px; }
-        tr:hover td { background: #1c1c1e; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; }
-        .badge-green { background: #0d3b1e; color: #30d158; }
-        .badge-red { background: #3b0d0d; color: #ff453a; }
-        .badge-yellow { background: #3b2d0d; color: #ff9f0a; }
-        .badge-blue { background: #0d1f3b; color: #0a84ff; }
-        .badge-gray { background: #2c2c2e; color: #8e8e93; }
-        .stat-card { background: #1c1c1e; border: 1px solid #2c2c2e; border-radius: 12px; padding: 16px; }
-        .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #8e8e93; margin-bottom: 4px; }
-        .stat-value { font-size: 28px; font-weight: 700; }
-        .nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; cursor: pointer; color: #8e8e93; transition: all 0.2s; font-size: 14px; }
-        .nav-item:hover { background: #1c1c1e; color: #fff; }
-        .nav-item.active { background: #0a84ff22; color: #0a84ff; border-left: 3px solid #0a84ff; }
-        .chat-msg { padding: 10px 14px; border-radius: 12px; max-width: 80%; margin-bottom: 8px; font-size: 14px; line-height: 1.5; }
-        .chat-user { background: #0a84ff; color: #fff; margin-left: auto; }
-        .chat-ai { background: #2c2c2e; color: #fff; }
-        .progress-bar { height: 6px; background: #2c2c2e; border-radius: 3px; overflow: hidden; }
-        .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+        th { padding: 10px 8px; text-align: left; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; }
+        tr:hover td { background: rgba(255,255,255,.03); }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal { background: #1c1c1e; border-radius: 14px; padding: 24px; width: 90%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+        .modal h3 { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 16px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group { margin-bottom: 12px; }
+        .toast { position: fixed; top: 20px; right: 20px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 12px 16px; font-size: 13px; z-index: 200; animation: slideIn .3s; }
+        @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .chat-messages { display: flex; flex-direction: column; gap: 12px; max-height: 500px; overflow-y: auto; padding: 12px 0; }
+        .chat-msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+        .chat-msg.user { background: #0a84ff; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        .chat-msg.assistant { background: #2c2c2e; color: #e5e5ea; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .nav-item { color: #8e8e93; padding: 10px 14px; cursor: pointer; border-radius: 8px; margin: 2px 8px; transition: all .15s; font-size: 13px; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover { background: rgba(255,255,255,.05); }
+        .nav-item.active { background: rgba(10,132,255,.15); color: #0a84ff; }
+        .page-title { font-size: 26px; font-weight: 700; color: #fff; }
+        .page-sub { font-size: 13px; color: #8e8e93; margin-top: 2px; }
+        .grid-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .section-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 12px; }
+        .health-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+        .health-dot.ok { background: #34d399; }
+        .health-dot.warn { background: #fb923c; }
+        .health-dot.err { background: #ef4444; }
+        .pagination { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 16px; }
+        .page-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: transparent; color: #e5e5ea; cursor: pointer; font-size: 12px; }
+        .page-btn:hover { background: rgba(255,255,255,.08); }
+        .page-btn.active { background: #0a84ff; border-color: #0a84ff; color: #fff; }
+        .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: #8e8e93; }
+        .loading::after { content: ''; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.1); border-top-color: #0a84ff; border-radius: 50%; margin-left: 10px; animation: spin .6s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .empty { text-align: center; padding: 40px; color: #636366; font-size: 14px; }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .grid-stats { grid-template-columns: 1fr 1fr; }
+        }
     </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useCallback, useRef } = React;
+    <div id="root"></div>
 
-// ============================================================================
-// API Helper
-// ============================================================================
-const API_BASE = '/admin/api';
-async function api(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
-    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
-    if (res.status === 401) {
-        localStorage.removeItem('token');
-        window.location.hash = '#/login';
-        throw new Error('Unauthorized');
-    }
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.detail || 'API Error');
-    return data;
-}
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef, useMemo } = React;
+        const { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, AreaChart, Area } = Recharts;
 
-// ============================================================================
-// LOGIN PAGE
-// ============================================================================
-function LoginPage({ onLogin }) {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
-        try {
-            const data = await api('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ username, password }),
-            });
-            localStorage.setItem('token', data.access_token);
-            onLogin(username);
-        } catch (err) {
-            setError(err.message || 'Login failed');
+        const API_BASE = '/admin/api';
+        let authToken = localStorage.getItem('vinosomm_token') || null;
+
+        async function api(path, opts = {}) {
+            const headers = { 'Content-Type': 'application/json', ...opts.headers };
+            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+            const resp = await fetch(`${API_BASE}${path}`, { ...opts, headers });
+            if (resp.status === 401) { authToken = null; localStorage.removeItem('vinosomm_token'); throw new Error('Unauthorized'); }
+            if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.detail || `HTTP ${resp.status}`); }
+            return resp.json();
         }
-        setLoading(false);
-    };
-    return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-            <form onSubmit={handleSubmit} style={{ width: 340 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 300, textAlign: 'center', marginBottom: 4 }}>vinosomm.ai</h1>
-                <p style={{ textAlign: 'center', color: '#8e8e93', marginBottom: 32 }}>Admin Panel</p>
-                {error && <div style={{ background: '#3b0d0d', color: '#ff453a', padding: '8px 12px', borderRadius: 8, marginBottom: 12, fontSize: 13 }}>{error}</div>}
-                <label style={{ fontSize: 13, color: '#8e8e93', marginBottom: 4, display: 'block' }}>Username</label>
-                <input value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter username" style={{ marginBottom: 16 }} />
-                <label style={{ fontSize: 13, color: '#8e8e93', marginBottom: 4, display: 'block' }}>Password</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Enter password" style={{ marginBottom: 20 }} />
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: 12, fontSize: 16 }} disabled={loading}>
-                    {loading ? 'Signing in...' : 'Sign In'}
-                </button>
-            </form>
-        </div>
-    );
-}
 
-// ============================================================================
-// DASHBOARD PAGE
-// ============================================================================
-function DashboardPage() {
-    const [data, setData] = useState(null);
-    const [health, setHealth] = useState(null);
-    useEffect(() => {
-        api('/dashboard').then(setData).catch(console.error);
-        api('/system/health').then(setHealth).catch(console.error);
-    }, []);
-    if (!data) return <div style={{ padding: 20, color: '#8e8e93' }}>Loading dashboard...</div>;
-    const taskStats = data.task_stats || {};
-    return (
-        <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Dashboard</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-                <div className="stat-card"><div className="stat-label">Total Wines</div><div className="stat-value">{data.total_wines}</div></div>
-                <div className="stat-card"><div className="stat-label">Added Today</div><div className="stat-value">{data.wines_added_today}</div></div>
-                <div className="stat-card"><div className="stat-label">Added This Week</div><div className="stat-value">{data.wines_added_this_week}</div></div>
-                <div className="stat-card"><div className="stat-label">Avg Completeness</div><div className="stat-value">{Math.round(data.avg_completeness)}%</div></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
-                <div className="stat-card"><div className="stat-label">Tasks Queued</div><div className="stat-value" style={{ color: '#ff9f0a' }}>{taskStats.queued || 0}</div></div>
-                <div className="stat-card"><div className="stat-label">Tasks Running</div><div className="stat-value" style={{ color: '#0a84ff' }}>{taskStats.running || 0}</div></div>
-                <div className="stat-card"><div className="stat-label">Tasks Completed</div><div className="stat-value" style={{ color: '#30d158' }}>{taskStats.completed || 0}</div></div>
-                <div className="stat-card"><div className="stat-label">Needs Review</div><div className="stat-value" style={{ color: '#ff453a' }}>{data.needs_review || 0}</div></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Wines by Type</h3>
-                    {Object.entries(data.wines_by_type || {}).map(([type, count]) => (
-                        <div key={type} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #2c2c2e' }}>
-                            <span style={{ textTransform: 'capitalize' }}>{type}</span>
-                            <span style={{ color: '#8e8e93' }}>{count}</span>
-                        </div>
-                    ))}
-                </div>
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Wines by Country</h3>
-                    {Object.entries(data.wines_by_country || {}).map(([country, count]) => (
-                        <div key={country} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #2c2c2e' }}>
-                            <span>{country}</span>
-                            <span style={{ color: '#8e8e93' }}>{count}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            {health && (
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>System Health</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
-                        {Object.entries(health.services || {}).map(([svc, info]) => (
-                            <div key={svc} style={{ textAlign: 'center', padding: 8 }}>
-                                <div style={{ fontSize: 20, marginBottom: 4 }}>{info.status === 'connected' ? '\u2705' : '\u274c'}</div>
-                                <div style={{ fontSize: 12, textTransform: 'capitalize' }}>{svc}</div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ============================================================================
-// WINES PAGE
-// ============================================================================
-function WinesPage() {
-    const [wines, setWines] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(1);
-    const [search, setSearch] = useState('');
-    const [editWine, setEditWine] = useState(null);
-    const [showAdd, setShowAdd] = useState(false);
-    const perPage = 20;
-
-    const load = useCallback(() => {
-        let q = `/wines?page=${page}&per_page=${perPage}`;
-        if (search) q += `&search=${encodeURIComponent(search)}`;
-        api(q).then(d => { setWines(d.wines); setTotal(d.total); }).catch(console.error);
-    }, [page, search]);
-    useEffect(load, [load]);
-
-    const handleEnrich = async (id) => {
-        try {
-            const r = await api(`/enrich/${id}`, { method: 'POST' });
-            alert(`Enrichment ${r.status}: ${r.message}`);
-            load();
-        } catch (e) { alert('Error: ' + e.message); }
-    };
-    const handleDelete = async (id) => {
-        if (!confirm('Delete this wine?')) return;
-        await api(`/wines/${id}`, { method: 'DELETE' });
-        load();
-    };
-    const handleFlag = async (id) => {
-        await api(`/review/flag/${id}`, { method: 'POST', body: JSON.stringify({ reason: 'Manual flag' }) });
-        load();
-    };
-
-    return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 600 }}>Wine Database ({total})</h2>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} placeholder="Search wines..." style={{ width: 250 }} />
-                    <button className="btn btn-primary" onClick={() => setShowAdd(true)}>+ Add Wine</button>
-                </div>
-            </div>
-            <div className="card" style={{ padding: 0, overflow: 'auto' }}>
-                <table>
-                    <thead><tr><th>Name</th><th>Type</th><th>Producer</th><th>Country</th><th>Vintage</th><th>Completeness</th><th>Method</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        {wines.map(w => (
-                            <tr key={w.id}>
-                                <td style={{ fontWeight: 500, maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.name}</td>
-                                <td><span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>{w.wine_type}</span></td>
-                                <td style={{ color: '#8e8e93' }}>{w.producer || '-'}</td>
-                                <td>{w.country || '-'}</td>
-                                <td>{w.vintage || '-'}</td>
-                                <td>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                        <div className="progress-bar" style={{ width: 60 }}>
-                                            <div className="progress-fill" style={{ width: `${w.completeness || 0}%`, background: (w.completeness||0) > 60 ? '#30d158' : (w.completeness||0) > 30 ? '#ff9f0a' : '#ff453a' }}></div>
-                                        </div>
-                                        <span style={{ fontSize: 12, color: '#8e8e93' }}>{Math.round(w.completeness || 0)}%</span>
-                                    </div>
-                                </td>
-                                <td><span className={`badge ${w.data_method ? 'badge-green' : 'badge-gray'}`}>{w.data_method || 'none'}</span></td>
-                                <td>
-                                    <div style={{ display: 'flex', gap: 4 }}>
-                                        <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setEditWine(w)}>Edit</button>
-                                        <button className="btn btn-primary" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => handleEnrich(w.id)}>Enrich</button>
-                                        <button className="btn btn-warning" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => handleFlag(w.id)}>Flag</button>
-                                        <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => handleDelete(w.id)}>Del</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12 }}>
-                <button className="btn btn-secondary" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Prev</button>
-                <span style={{ padding: '8px 12px', color: '#8e8e93' }}>Page {page} of {Math.ceil(total / perPage) || 1}</span>
-                <button className="btn btn-secondary" disabled={page >= Math.ceil(total / perPage)} onClick={() => setPage(p => p + 1)}>Next</button>
-            </div>
-            {(editWine || showAdd) && <WineModal wine={editWine} onClose={() => { setEditWine(null); setShowAdd(false); }} onSave={load} />}
-        </div>
-    );
-}
-
-function WineModal({ wine, onClose, onSave }) {
-    const [form, setForm] = useState(wine || { name: '', wine_type: 'red', producer: '', vintage: '', region: '', country: '', grape_variety: '' });
-    const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-    const save = async () => {
-        try {
-            if (wine) await api(`/wines/${wine.id}`, { method: 'PUT', body: JSON.stringify(form) });
-            else await api('/wines', { method: 'POST', body: JSON.stringify(form) });
-            onSave();
-            onClose();
-        } catch (e) { alert(e.message); }
-    };
-    return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }} onClick={onClose}>
-            <div className="card" style={{ width: 500, maxHeight: '80vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
-                <h3 style={{ marginBottom: 16 }}>{wine ? 'Edit Wine' : 'Add Wine'}</h3>
-                {['name', 'producer', 'region', 'country', 'grape_variety', 'classification'].map(f => (
-                    <div key={f} style={{ marginBottom: 10 }}>
-                        <label style={{ fontSize: 12, color: '#8e8e93', textTransform: 'capitalize' }}>{f.replace('_', ' ')}</label>
-                        <input value={form[f] || ''} onChange={e => set(f, e.target.value)} />
-                    </div>
-                ))}
-                <div style={{ marginBottom: 10 }}>
-                    <label style={{ fontSize: 12, color: '#8e8e93' }}>Wine Type</label>
-                    <select value={form.wine_type} onChange={e => set('wine_type', e.target.value)}>
-                        {['red', 'white', 'rose', 'sparkling', 'dessert', 'fortified'].map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                </div>
-                <div style={{ marginBottom: 10 }}>
-                    <label style={{ fontSize: 12, color: '#8e8e93' }}>Vintage</label>
-                    <input type="number" value={form.vintage || ''} onChange={e => set('vintage', parseInt(e.target.value) || null)} />
-                </div>
-                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                    <button className="btn btn-primary" onClick={save}>Save</button>
-                    <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ============================================================================
-// CRAWLER PAGE
-// ============================================================================
-function CrawlerPage() {
-    const [status, setStatus] = useState(null);
-    const [query, setQuery] = useState('');
-    const [target, setTarget] = useState('all_unenriched');
-    const [loading, setLoading] = useState(false);
-
-    const loadStatus = () => api('/crawler/status').then(setStatus).catch(console.error);
-    useEffect(() => { loadStatus(); const iv = setInterval(loadStatus, 10000); return () => clearInterval(iv); }, []);
-
-    const startCrawl = async () => {
-        setLoading(true);
-        try {
-            const r = await api('/crawler/start', { method: 'POST', body: JSON.stringify({ query, target }) });
-            alert(r.message);
-            loadStatus();
-        } catch (e) { alert(e.message); }
-        setLoading(false);
-    };
-    const stopCrawl = async () => {
-        const r = await api('/crawler/stop', { method: 'POST' });
-        alert(r.message);
-        loadStatus();
-    };
-
-    return (
-        <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Crawler Control</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-                <div className="stat-card">
-                    <div className="stat-label">Active Crawls</div>
-                    <div className="stat-value" style={{ color: status?.active_crawls ? '#0a84ff' : '#8e8e93' }}>{status?.active_crawls || 0}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">Completed</div>
-                    <div className="stat-value" style={{ color: '#30d158' }}>{status?.completed_crawls || 0}</div>
-                </div>
-                <div className="stat-card">
-                    <div className="stat-label">SearXNG</div>
-                    <div className="stat-value" style={{ fontSize: 18 }}>
-                        <span className={`badge ${status?.searxng_status === 'connected' ? 'badge-green' : 'badge-red'}`}>{status?.searxng_status || '...'}</span>
-                    </div>
-                </div>
-            </div>
-            <div className="card" style={{ marginBottom: 20 }}>
-                <h3 style={{ marginBottom: 12 }}>Start New Crawl</h3>
-                <div style={{ marginBottom: 12 }}>
-                    <label style={{ fontSize: 12, color: '#8e8e93' }}>Target</label>
-                    <select value={target} onChange={e => setTarget(e.target.value)}>
-                        <option value="all_unenriched">All Unenriched Wines</option>
-                        <option value="custom">Custom Search Query</option>
-                    </select>
-                </div>
-                {target === 'custom' && (
-                    <div style={{ marginBottom: 12 }}>
-                        <label style={{ fontSize: 12, color: '#8e8e93' }}>Search Query</label>
-                        <input value={query} onChange={e => setQuery(e.target.value)} placeholder="e.g. Barolo 2019" />
-                    </div>
-                )}
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary" onClick={startCrawl} disabled={loading}>{loading ? 'Starting...' : 'Start Crawl'}</button>
-                    <button className="btn btn-danger" onClick={stopCrawl} disabled={!status?.active_crawls}>Stop All</button>
-                </div>
-            </div>
-            {status?.last_crawl && (
-                <div className="card">
-                    <h3 style={{ marginBottom: 8 }}>Last Crawl</h3>
-                    <div style={{ fontSize: 13, color: '#8e8e93' }}>
-                        <div>Type: {status.last_crawl.wine_name}</div>
-                        <div>Status: <span className={`badge ${status.last_crawl.status === 'completed' ? 'badge-green' : status.last_crawl.status === 'running' ? 'badge-blue' : 'badge-gray'}`}>{status.last_crawl.status}</span></div>
-                        <div>Created: {new Date(status.last_crawl.created_at).toLocaleString()}</div>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-}
-
-// ============================================================================
-// CHAT PAGE
-// ============================================================================
-function ChatPage() {
-    const [messages, setMessages] = useState([{ role: 'assistant', content: 'Hello! I\'m the vinosomm.ai assistant. Ask me about wines in the database, wine knowledge, or data quality.' }]);
-    const [input, setInput] = useState('');
-    const [loading, setLoading] = useState(false);
-    const messagesEnd = useRef(null);
-    useEffect(() => { messagesEnd.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-
-    const send = async () => {
-        if (!input.trim() || loading) return;
-        const msg = input.trim();
-        setInput('');
-        setMessages(prev => [...prev, { role: 'user', content: msg }]);
-        setLoading(true);
-        try {
-            const data = await api('/chat', {
-                method: 'POST',
-                body: JSON.stringify({ message: msg, history: messages.slice(-10) }),
-            });
-            setMessages(prev => [...prev, { role: 'assistant', content: data.response }]);
-        } catch (e) {
-            setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
+        let toastTimeout = null;
+        function showToast(msg, type = 'info') {
+            const el = document.getElementById('toast');
+            if (!el) return;
+            el.textContent = type === 'error' ? '\u2715 ' + msg : type === 'success' ? '\u2713 ' + msg : '\u2139 ' + msg;
+            el.style.display = 'block';
+            el.style.borderColor = type === 'error' ? '#ef4444' : type === 'success' ? '#34d399' : '#0a84ff';
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { el.style.display = 'none'; }, 3000);
         }
-        setLoading(false);
-    };
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 40px)' }}>
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 12 }}>AI Chat (Ollama)</h2>
-            <div className="card" style={{ flex: 1, overflow: 'auto', marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {messages.map((m, i) => (
-                    <div key={i} style={{ display: 'flex' }}>
-                        <div className={`chat-msg ${m.role === 'user' ? 'chat-user' : 'chat-ai'}`}>
-                            {m.content}
-                        </div>
-                    </div>
-                ))}
-                {loading && <div style={{ color: '#8e8e93', fontSize: 13, padding: 8 }}>Thinking...</div>}
-                <div ref={messagesEnd} />
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
-                <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()} placeholder="Ask about wines..." style={{ flex: 1 }} />
-                <button className="btn btn-primary" onClick={send} disabled={loading}>Send</button>
-            </div>
-        </div>
-    );
-}
-
-// ============================================================================
-// REVIEW QUEUE PAGE
-// ============================================================================
-function ReviewPage() {
-    const [wines, setWines] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(1);
-
-    const load = useCallback(() => {
-        api(`/review?page=${page}`).then(d => { setWines(d.wines); setTotal(d.total); }).catch(console.error);
-    }, [page]);
-    useEffect(load, [load]);
-
-    const approve = async (id) => {
-        await api(`/review/${id}/approve`, { method: 'POST' });
-        load();
-    };
-    const reject = async (id) => {
-        const reason = prompt('Rejection reason:');
-        if (reason === null) return;
-        await api(`/review/${id}/reject`, { method: 'POST', body: JSON.stringify({ reason }) });
-        load();
-    };
-
-    return (
-        <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Review Queue ({total})</h2>
-            {wines.length === 0 ? (
-                <div className="card" style={{ textAlign: 'center', padding: 40, color: '#8e8e93' }}>No wines pending review</div>
-            ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    {wines.map(w => (
-                        <div key={w.id} className="card">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div>
-                                    <h3 style={{ fontSize: 16, fontWeight: 600 }}>{w.name}</h3>
-                                    <div style={{ fontSize: 13, color: '#8e8e93', marginTop: 4 }}>
-                                        {w.producer && <span>{w.producer} &middot; </span>}
-                                        {w.vintage && <span>{w.vintage} &middot; </span>}
-                                        {w.region && <span>{w.region} &middot; </span>}
-                                        {w.country}
-                                    </div>
-                                    {w.review_notes && <div style={{ fontSize: 12, color: '#ff9f0a', marginTop: 4 }}>Note: {w.review_notes}</div>}
-                                    <div style={{ display: 'flex', gap: 16, marginTop: 8, fontSize: 13, color: '#8e8e93' }}>
-                                        <span>Completeness: {Math.round(w.completeness || 0)}%</span>
-                                        <span>Confidence: {w.avg_confidence ? Math.round(w.avg_confidence * 100) + '%' : 'N/A'}</span>
-                                        <span>Sources: {w.source_count || 0}</span>
-                                        <span>Method: {w.data_method || 'none'}</span>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: 8 }}>
-                                    <button className="btn btn-success" onClick={() => approve(w.id)}>Approve</button>
-                                    <button className="btn btn-danger" onClick={() => reject(w.id)}>Reject</button>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+        function LoginScreen({ onLogin }) {
+            const [user, setUser] = useState('');
+            const [pass, setPass] = useState('');
+            const [loading, setLoading] = useState(false);
+            const [err, setErr] = useState('');
+            const submit = async (e) => {
+                e.preventDefault(); setLoading(true); setErr('');
+                try {
+                    const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ username: user, password: pass }) });
+                    authToken = data.access_token; localStorage.setItem('vinosomm_token', authToken); onLogin();
+                } catch (ex) { setErr(ex.message); }
+                setLoading(false);
+            };
+            return (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
+                    <form onSubmit={submit} style={{ width: 320, textAlign: 'center' }}>
+                        <div style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 4 }}>vinosomm.ai</div>
+                        <div style={{ color: '#8e8e93', fontSize: 14, marginBottom: 32 }}>Admin Panel</div>
+                        <div className="form-group"><input className="input" placeholder="Username" value={user} onChange={e => setUser(e.target.value)} autoFocus /></div>
+                        <div className="form-group"><input className="input" type="password" placeholder="Password" value={pass} onChange={e => setPass(e.target.value)} /></div>
+                        {err && <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{err}</div>}
+                        <button className="btn btn-primary" style={{ width: '100%', padding: '10px 0' }} disabled={loading}>{loading ? 'Signing in\u2026' : 'Sign In'}</button>
+                    </form>
                 </div>
-            )}
-        </div>
-    );
-}
-
-// ============================================================================
-// TASKS PAGE
-// ============================================================================
-function TasksPage() {
-    const [tasks, setTasks] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(1);
-    const [filter, setFilter] = useState('');
-
-    const load = useCallback(() => {
-        let q = `/tasks?page=${page}`;
-        if (filter) q += `&status_filter=${filter}`;
-        api(q).then(d => { setTasks(d.tasks); setTotal(d.total); }).catch(console.error);
-    }, [page, filter]);
-    useEffect(load, [load]);
-    useEffect(() => { const iv = setInterval(load, 8000); return () => clearInterval(iv); }, [load]);
-
-    const cancel = async (id) => { await api(`/tasks/${id}/cancel`, { method: 'POST' }); load(); };
-    const clear = async (type) => { await api('/tasks/clear', { method: 'POST', body: JSON.stringify({ type }) }); load(); };
-
-    const statusColor = { queued: 'badge-yellow', running: 'badge-blue', completed: 'badge-green', failed: 'badge-red', cancelled: 'badge-gray' };
-
-    return (
-        <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h2 style={{ fontSize: 22, fontWeight: 600 }}>Task Monitor ({total})</h2>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    <select value={filter} onChange={e => { setFilter(e.target.value); setPage(1); }} style={{ width: 150 }}>
-                        <option value="">All</option>
-                        <option value="queued">Queued</option>
-                        <option value="running">Running</option>
-                        <option value="completed">Completed</option>
-                        <option value="failed">Failed</option>
-                    </select>
-                    <button className="btn btn-secondary" onClick={() => clear('completed')}>Clear Done</button>
-                    <button className="btn btn-danger" onClick={() => clear('all')}>Clear All</button>
-                </div>
-            </div>
-            <div className="card" style={{ padding: 0 }}>
-                <table>
-                    <thead><tr><th>ID</th><th>Type</th><th>Wine</th><th>Status</th><th>Created</th><th>Duration</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        {tasks.map(t => {
-                            const dur = t.started_at && t.completed_at ? Math.round((new Date(t.completed_at) - new Date(t.started_at)) / 1000) + 's' : t.started_at ? 'running...' : '-';
-                            return (
-                                <tr key={t.id}>
-                                    <td style={{ color: '#8e8e93' }}>#{t.id}</td>
-                                    <td><span className="badge badge-blue">{t.task_type}</span></td>
-                                    <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.wine_name || '-'}</td>
-                                    <td><span className={`badge ${statusColor[t.status] || 'badge-gray'}`}>{t.status}</span></td>
-                                    <td style={{ fontSize: 12, color: '#8e8e93' }}>{t.created_at ? new Date(t.created_at).toLocaleString() : '-'}</td>
-                                    <td style={{ fontSize: 12 }}>{dur}</td>
-                                    <td>
-                                        {['queued', 'running'].includes(t.status) && (
-                                            <button className="btn btn-danger" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => cancel(t.id)}>Cancel</button>
-                                        )}
-                                        {t.error && <span style={{ fontSize: 11, color: '#ff453a' }} title={t.error}>Error</span>}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                        {tasks.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: '#8e8e93', padding: 20 }}>No tasks</td></tr>}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    );
-}
-
-// ============================================================================
-// STATS PAGE
-// ============================================================================
-function StatsPage() {
-    const [stats, setStats] = useState(null);
-    useEffect(() => { api('/stats').then(setStats).catch(console.error); }, []);
-    if (!stats) return <div style={{ padding: 20, color: '#8e8e93' }}>Loading stats...</div>;
-
-    const BarViz = ({ data, maxVal, color }) => (
-        <div>
-            {Object.entries(data).map(([label, val]) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    <span style={{ width: 100, fontSize: 12, color: '#8e8e93', textAlign: 'right', flexShrink: 0 }}>{label}</span>
-                    <div style={{ flex: 1, height: 18, background: '#2c2c2e', borderRadius: 4, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${Math.max((val / (maxVal || 1)) * 100, 2)}%`, background: color, borderRadius: 4, transition: 'width 0.5s' }}></div>
-                    </div>
-                    <span style={{ fontSize: 12, width: 30, textAlign: 'right' }}>{val}</span>
-                </div>
-            ))}
-        </div>
-    );
-
-    const maxType = Math.max(...Object.values(stats.by_type || {}), 1);
-    const maxCountry = Math.max(...Object.values(stats.by_country || {}), 1);
-    const maxComp = Math.max(...Object.values(stats.completeness_distribution || {}), 1);
-
-    return (
-        <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Statistics & Analytics</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
-                <div className="stat-card"><div className="stat-label">Total Wines</div><div className="stat-value">{stats.total}</div></div>
-                <div className="stat-card"><div className="stat-label">Enriched</div><div className="stat-value" style={{ color: '#30d158' }}>{stats.enriched}</div></div>
-                <div className="stat-card"><div className="stat-label">Unenriched</div><div className="stat-value" style={{ color: '#ff9f0a' }}>{stats.unenriched}</div></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>By Wine Type</h3>
-                    <BarViz data={stats.by_type} maxVal={maxType} color="#0a84ff" />
-                </div>
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>By Country</h3>
-                    <BarViz data={stats.by_country} maxVal={maxCountry} color="#30d158" />
-                </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Completeness Distribution</h3>
-                    <BarViz data={stats.completeness_distribution} maxVal={maxComp} color="#ff9f0a" />
-                </div>
-                <div className="card">
-                    <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Average Taste Scores</h3>
-                    {Object.entries(stats.avg_scores || {}).map(([dim, val]) => (
-                        <div key={dim} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                            <span style={{ width: 100, fontSize: 12, color: '#8e8e93', textAlign: 'right', textTransform: 'capitalize' }}>{dim}</span>
-                            <div style={{ flex: 1, height: 8, background: '#2c2c2e', borderRadius: 4, overflow: 'hidden' }}>
-                                <div style={{ height: '100%', width: `${(val / 5) * 100}%`, background: '#bf5af2', borderRadius: 4 }}></div>
-                            </div>
-                            <span style={{ fontSize: 12, width: 30, textAlign: 'right' }}>{val.toFixed(1)}</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            <div className="card">
-                <h3 style={{ fontSize: 15, fontWeight: 600, marginBottom: 12 }}>Data Methods</h3>
-                <BarViz data={stats.by_method} maxVal={Math.max(...Object.values(stats.by_method || {}), 1)} color="#bf5af2" />
-            </div>
-        </div>
-    );
-}
-
-// ============================================================================
-// SETTINGS PAGE
-// ============================================================================
-function SettingsPage() {
-    const [settings, setSettings] = useState({});
-    const [saving, setSaving] = useState(false);
-    const [msg, setMsg] = useState('');
-
-    useEffect(() => { api('/settings').then(d => setSettings(d.settings)).catch(console.error); }, []);
-
-    const save = async () => {
-        setSaving(true);
-        try {
-            await api('/settings', { method: 'PUT', body: JSON.stringify({ settings }) });
-            setMsg('Settings saved!');
-            setTimeout(() => setMsg(''), 3000);
-        } catch (e) { setMsg('Error: ' + e.message); }
-        setSaving(false);
-    };
-
-    const labels = {
-        ollama_model: 'Ollama Model',
-        ollama_url: 'Ollama URL',
-        searxng_url: 'SearXNG URL',
-        enrichment_batch_size: 'Enrichment Batch Size',
-        enrichment_schedule: 'Enrichment Schedule',
-        auto_review_threshold: 'Auto-Review Confidence Threshold',
-        max_concurrent_tasks: 'Max Concurrent Tasks',
-    };
-
-    return (
-        <div>
-            <h2 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Settings</h2>
-            <div className="card">
-                {Object.entries(settings).map(([key, value]) => (
-                    <div key={key} style={{ marginBottom: 16 }}>
-                        <label style={{ fontSize: 13, color: '#8e8e93', marginBottom: 4, display: 'block' }}>{labels[key] || key}</label>
-                        <input value={value} onChange={e => setSettings(s => ({ ...s, [key]: e.target.value }))} />
-                    </div>
-                ))}
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving...' : 'Save Settings'}</button>
-                    {msg && <span style={{ fontSize: 13, color: msg.startsWith('Error') ? '#ff453a' : '#30d158' }}>{msg}</span>}
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ============================================================================
-// APP SHELL
-// ============================================================================
-function App() {
-    const [user, setUser] = useState(localStorage.getItem('token') ? 'admin' : null);
-    const [route, setRoute] = useState(window.location.hash || '#/dashboard');
-
-    useEffect(() => {
-        const onHash = () => setRoute(window.location.hash || '#/dashboard');
-        window.addEventListener('hashchange', onHash);
-        return () => window.removeEventListener('hashchange', onHash);
-    }, []);
-
-    useEffect(() => {
-        if (!user && route !== '#/login') {
-            window.location.hash = '#/login';
-            setRoute('#/login');
+            );
         }
-    }, [user, route]);
 
-    const logout = () => { localStorage.removeItem('token'); setUser(null); window.location.hash = '#/login'; };
-
-    if (!user) return <LoginPage onLogin={setUser} />;
-
-    const navItems = [
-        { hash: '#/dashboard', icon: '\uD83D\uDCCA', label: 'Dashboard' },
-        { hash: '#/wines', icon: '\uD83C\uDF77', label: 'Wines' },
-        { hash: '#/crawler', icon: '\uD83D\uDD77\uFE0F', label: 'Crawler' },
-        { hash: '#/chat', icon: '\uD83E\uDD16', label: 'AI Chat' },
-        { hash: '#/review', icon: '\u2705', label: 'Review' },
-        { hash: '#/tasks', icon: '\u2699\uFE0F', label: 'Tasks' },
-        { hash: '#/stats', icon: '\uD83D\uDCC8', label: 'Stats' },
-        { hash: '#/settings', icon: '\uD83D\uDD27', label: 'Settings' },
-    ];
-
-    const pages = {
-        '#/dashboard': DashboardPage,
-        '#/wines': WinesPage,
-        '#/crawler': CrawlerPage,
-        '#/chat': ChatPage,
-        '#/review': ReviewPage,
-        '#/tasks': TasksPage,
-        '#/stats': StatsPage,
-        '#/settings': SettingsPage,
-    };
-    const Page = pages[route] || DashboardPage;
-
-    return (
-        <div style={{ display: 'flex', minHeight: '100vh' }}>
-            <nav style={{ width: 180, background: '#0a0a0a', borderRight: '1px solid #1c1c1e', padding: '16px 8px', flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-                <div style={{ marginBottom: 20, padding: '0 12px' }}>
-                    <div style={{ fontSize: 11, color: '#8e8e93' }}>Logged in as</div>
-                    <div style={{ fontWeight: 600 }}>{user}</div>
-                    <button className="btn btn-secondary" style={{ width: '100%', marginTop: 8, fontSize: 12, padding: '6px 0' }} onClick={logout}>Logout</button>
+        function StatCard({ label, value, change, changeType }) {
+            return (
+                <div className="stat-card">
+                    <div style={{ fontSize: 12, color: '#8e8e93' }}>{label}</div>
+                    <div style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '6px 0' }}>{value}</div>
+                    {change && <div style={{ fontSize: 11, color: changeType === 'positive' ? '#34d399' : changeType === 'negative' ? '#ef4444' : '#8e8e93' }}>{change}</div>}
                 </div>
-                {navItems.map(n => (
-                    <a key={n.hash} href={n.hash} className={`nav-item ${route === n.hash ? 'active' : ''}`} style={{ textDecoration: 'none' }}>
-                        <span>{n.icon}</span> {n.label}
-                    </a>
-                ))}
-            </nav>
-            <main style={{ flex: 1, padding: 20, overflow: 'auto' }}>
-                <Page />
-            </main>
-        </div>
-    );
-}
+            );
+        }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</script>
+        const COLORS = ['#0a84ff', '#34d399', '#fb923c', '#ef4444', '#a78bfa', '#f472b6', '#fbbf24', '#6ee7b7', '#818cf8', '#fb7185'];
+
+        function DashboardPage() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(true);
+            useEffect(() => { api('/dashboard').then(setData).catch(e => showToast(e.message, 'error')).finally(() => setLoading(false)); }, []);
+            if (loading) return <div className="loading">Loading dashboard</div>;
+            if (!data) return <div className="empty">Failed to load dashboard</div>;
+            const typeData = Object.entries(data.wines_by_type || {}).map(([name, value]) => ({ name, value }));
+            const countryData = Object.entries(data.wines_by_country || {}).map(([name, value]) => ({ name, value }));
+            return (
+                <div>
+                    <div style={{ marginBottom: 20 }}><h1 className="page-title">Dashboard</h1><div className="page-sub">Welcome back to vinosomm.ai Admin</div></div>
+                    <div className="grid-stats">
+                        <StatCard label="Total Wines" value={data.total_wines} change={'+' + data.wines_added_this_week + ' this week'} changeType="positive" />
+                        <StatCard label="Added Today" value={data.wines_added_today} change={'+' + data.wines_added_this_month + ' this month'} changeType="positive" />
+                        <StatCard label="Avg Completeness" value={(data.avg_completeness || 0).toFixed(1) + '%'} />
+                        <StatCard label="Needs Review" value={data.needs_review} changeType={data.needs_review > 0 ? 'negative' : 'positive'} change={data.needs_review > 0 ? 'Attention needed' : 'All clear'} />
+                    </div>
+                    <div className="grid-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+                        <StatCard label="Tasks Queued" value={(data.task_stats && data.task_stats.queued) || 0} />
+                        <StatCard label="Tasks Running" value={(data.task_stats && data.task_stats.running) || 0} />
+                        <StatCard label="Tasks Done" value={(data.task_stats && data.task_stats.completed) || 0} />
+                        <StatCard label="Tasks Failed" value={(data.task_stats && data.task_stats.failed) || 0} />
+                    </div>
+                    <div className="grid-2" style={{ marginBottom: 16 }}>
+                        <div className="card"><div className="section-title">Wines by Type</div>
+                            {typeData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><PieChart><Pie data={typeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={function(e){ return e.name + ' ' + (e.percent*100).toFixed(0) + '%'; }} labelLine={false} fontSize={11}>{typeData.map(function(_, i){ return <Cell key={i} fill={COLORS[i % COLORS.length]} />; })}</Pie><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /></PieChart></ResponsiveContainer>) : <div className="empty">No data</div>}
+                        </div>
+                        <div className="card"><div className="section-title">Wines by Country</div>
+                            {countryData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><BarChart data={countryData} layout="vertical" margin={{ left: 60 }}><XAxis type="number" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis type="category" dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} width={55} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#0a84ff" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer>) : <div className="empty">No data</div>}
+                        </div>
+                    </div>
+                    <div className="card"><div className="section-title">Recent Wines</div>
+                        <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Vintage</th><th>Completeness</th></tr></thead>
+                        <tbody>{(data.recent_wines || []).map(function(w){ return (<tr key={w.id}><td style={{ color: '#fff', fontWeight: 500 }}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country}</td><td>{w.vintage}</td><td>{w.completeness != null ? w.completeness.toFixed(1) + '%' : '\u2014'}</td></tr>); })}</tbody></table>
+                    </div>
+                </div>
+            );
+        }
+
+        function WinesPage() {
+            const [wines, setWines] = useState([]);
+            const [total, setTotal] = useState(0);
+            const [page, setPage] = useState(1);
+            const [totalPages, setTotalPages] = useState(1);
+            const [search, setSearch] = useState('');
+            const [typeFilter, setTypeFilter] = useState('');
+            const [countryFilter, setCountryFilter] = useState('');
+            const [sortBy, setSortBy] = useState('created_at');
+            const [sortDir, setSortDir] = useState('desc');
+            const [loading, setLoading] = useState(true);
+            const [showAdd, setShowAdd] = useState(false);
+            const [editWine, setEditWine] = useState(null);
+            const searchTimeout = useRef(null);
+            const loadWines = useCallback(function() {
+                setLoading(true);
+                var params = new URLSearchParams({ page: page, per_page: 20, sort_by: sortBy, sort_dir: sortDir });
+                if (search) params.set('search', search);
+                if (typeFilter) params.set('wine_type', typeFilter);
+                if (countryFilter) params.set('country', countryFilter);
+                api('/wines?' + params).then(function(d) { setWines(d.wines); setTotal(d.total); setTotalPages(d.total_pages); }).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); });
+            }, [page, search, typeFilter, countryFilter, sortBy, sortDir]);
+            useEffect(function() { loadWines(); }, [loadWines]);
+            var handleSearch = function(val) { clearTimeout(searchTimeout.current); searchTimeout.current = setTimeout(function() { setSearch(val); setPage(1); }, 300); };
+            var deleteWine = async function(id) { if (!confirm('Delete this wine?')) return; try { await api('/wines/' + id, { method: 'DELETE' }); showToast('Wine deleted', 'success'); loadWines(); } catch(e) { showToast(e.message, 'error'); } };
+            var handleSort = function(col) { if (sortBy === col) setSortDir(function(d) { return d === 'asc' ? 'desc' : 'asc'; }); else { setSortBy(col); setSortDir('asc'); } setPage(1); };
+            var sortIcon = function(col) { return sortBy === col ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : ''; };
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <div><h1 className="page-title">Wine Inventory</h1><div className="page-sub">{total} wines total</div></div>
+                        <button className="btn btn-primary" onClick={function() { setEditWine(null); setShowAdd(true); }}>+ Add Wine</button>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                        <input className="input" style={{ maxWidth: 240 }} placeholder="Search wines\u2026" onChange={function(e) { handleSearch(e.target.value); }} />
+                        <select className="input" style={{ maxWidth: 140 }} value={typeFilter} onChange={function(e) { setTypeFilter(e.target.value); setPage(1); }}><option value="">All Types</option><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select>
+                        <select className="input" style={{ maxWidth: 140 }} value={countryFilter} onChange={function(e) { setCountryFilter(e.target.value); setPage(1); }}><option value="">All Countries</option><option value="France">France</option><option value="Italy">Italy</option><option value="Germany">Germany</option><option value="Spain">Spain</option><option value="USA">USA</option><option value="Australia">Australia</option><option value="Portugal">Portugal</option><option value="New Zealand">New Zealand</option></select>
+                    </div>
+                    <div className="card" style={{ overflow: 'auto' }}>
+                        {loading ? <div className="loading">Loading wines</div> : wines.length === 0 ? <div className="empty">No wines found</div> : (
+                            <table><thead><tr>
+                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('name')}}>Name{sortIcon('name')}</th>
+                                <th>Producer</th>
+                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('wine_type')}}>Type{sortIcon('wine_type')}</th>
+                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('country')}}>Country{sortIcon('country')}</th>
+                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('vintage')}}>Vintage{sortIcon('vintage')}</th>
+                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('completeness')}}>Complete{sortIcon('completeness')}</th>
+                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('rating')}}>Rating{sortIcon('rating')}</th>
+                                <th>Actions</th>
+                            </tr></thead>
+                            <tbody>{wines.map(function(w) { return (
+                                <tr key={w.id}>
+                                    <td style={{ color: '#fff', fontWeight: 500, maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.name}</td>
+                                    <td style={{ maxWidth: 140, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.producer || '\u2014'}</td>
+                                    <td><span className="badge badge-blue">{w.wine_type}</span></td>
+                                    <td>{w.country || '\u2014'}</td><td>{w.vintage || '\u2014'}</td>
+                                    <td>{w.completeness != null ? w.completeness.toFixed(0) + '%' : '\u2014'}</td>
+                                    <td>{w.rating ? '\u2605 ' + w.rating.toFixed(1) : '\u2014'}</td>
+                                    <td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-secondary btn-sm" onClick={function(){setEditWine(w);setShowAdd(true);}}>Edit</button><button className="btn btn-danger btn-sm" style={{ marginLeft: 4 }} onClick={function(){deleteWine(w.id);}}>&#10005;</button></td>
+                                </tr>); })}</tbody></table>
+                        )}
+                    </div>
+                    {totalPages > 1 && (<div className="pagination"><button className="page-btn" disabled={page <= 1} onClick={function(){setPage(function(p){return p-1;});}}>&#8592; Prev</button><span style={{ fontSize: 12, color: '#8e8e93' }}>Page {page} of {totalPages}</span><button className="page-btn" disabled={page >= totalPages} onClick={function(){setPage(function(p){return p+1;});}}>Next &#8594;</button></div>)}
+                    {showAdd && <WineModal wine={editWine} onClose={function(){setShowAdd(false);}} onSaved={function(){setShowAdd(false);loadWines();}} />}
+                </div>
+            );
+        }
+
+        function WineModal({ wine, onClose, onSaved }) {
+            const [form, setForm] = useState(wine || { name: '', wine_type: 'red', producer: '', vintage: '', region: '', country: '', grape_variety: '', price: '', rating: '' });
+            const [saving, setSaving] = useState(false);
+            var set = function(k, v) { setForm(function(f) { return Object.assign({}, f, {[k]: v}); }); };
+            var save = async function() {
+                if (!form.name || !form.wine_type) { showToast('Name and type required', 'error'); return; }
+                setSaving(true);
+                try {
+                    var body = Object.assign({}, form);
+                    if (body.vintage) body.vintage = parseInt(body.vintage);
+                    if (body.price) body.price = parseFloat(body.price);
+                    if (body.rating) body.rating = parseFloat(body.rating);
+                    if (wine && wine.id) await api('/wines/' + wine.id, { method: 'PUT', body: JSON.stringify(body) });
+                    else await api('/wines', { method: 'POST', body: JSON.stringify(body) });
+                    showToast(wine && wine.id ? 'Wine updated' : 'Wine created', 'success'); onSaved();
+                } catch(e) { showToast(e.message, 'error'); }
+                setSaving(false);
+            };
+            return (
+                <div className="overlay" onClick={onClose}><div className="modal" onClick={function(e){e.stopPropagation();}}>
+                    <h3>{wine && wine.id ? 'Edit Wine' : 'Add Wine'}</h3>
+                    <div className="form-group"><label className="label">Name *</label><input className="input" value={form.name} onChange={function(e){set('name',e.target.value);}} /></div>
+                    <div className="form-row">
+                        <div className="form-group"><label className="label">Type *</label><select className="input" value={form.wine_type} onChange={function(e){set('wine_type',e.target.value);}}><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select></div>
+                        <div className="form-group"><label className="label">Vintage</label><input className="input" type="number" value={form.vintage || ''} onChange={function(e){set('vintage',e.target.value);}} /></div>
+                    </div>
+                    <div className="form-group"><label className="label">Producer</label><input className="input" value={form.producer || ''} onChange={function(e){set('producer',e.target.value);}} /></div>
+                    <div className="form-row">
+                        <div className="form-group"><label className="label">Region</label><input className="input" value={form.region || ''} onChange={function(e){set('region',e.target.value);}} /></div>
+                        <div className="form-group"><label className="label">Country</label><input className="input" value={form.country || ''} onChange={function(e){set('country',e.target.value);}} /></div>
+                    </div>
+                    <div className="form-group"><label className="label">Grape Variety</label><input className="input" value={form.grape_variety || ''} onChange={function(e){set('grape_variety',e.target.value);}} /></div>
+                    <div className="form-row">
+                        <div className="form-group"><label className="label">Price</label><input className="input" type="number" step="0.01" value={form.price || ''} onChange={function(e){set('price',e.target.value);}} /></div>
+                        <div className="form-group"><label className="label">Rating</label><input className="input" type="number" step="0.1" min="0" max="5" value={form.rating || ''} onChange={function(e){set('rating',e.target.value);}} /></div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}><button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save'}</button><button className="btn btn-secondary" onClick={onClose}>Cancel</button></div>
+                </div></div>
+            );
+        }
+
+        function TasksPage() {
+            const [tasks, setTasks] = useState([]);
+            const [total, setTotal] = useState(0);
+            const [page, setPage] = useState(1);
+            const [statusFilter, setStatusFilter] = useState('');
+            const [loading, setLoading] = useState(true);
+            var loadTasks = useCallback(function() {
+                setLoading(true);
+                var params = new URLSearchParams({ page: page, per_page: 20 });
+                if (statusFilter) params.set('status_filter', statusFilter);
+                api('/tasks?' + params).then(function(d) { setTasks(d.tasks); setTotal(d.total); }).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); });
+            }, [page, statusFilter]);
+            useEffect(function() { loadTasks(); }, [loadTasks]);
+            useEffect(function() { var iv = setInterval(loadTasks, 10000); return function() { clearInterval(iv); }; }, [loadTasks]);
+            var cancelTask = async function(id) { try { await api('/tasks/' + id + '/cancel', { method: 'POST' }); showToast('Task cancelled', 'success'); loadTasks(); } catch(e) { showToast(e.message, 'error'); } };
+            var clearTasks = async function(type) { try { await api('/tasks/clear', { method: 'POST', body: JSON.stringify({ type: type }) }); showToast('Tasks cleared', 'success'); loadTasks(); } catch(e) { showToast(e.message, 'error'); } };
+            var statusBadge = function(s) { var map = { queued: 'badge-gray', running: 'badge-blue', completed: 'badge-green', failed: 'badge-red', cancelled: 'badge-yellow' }; return <span className={'badge ' + (map[s] || 'badge-gray')}>{s}</span>; };
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                        <div><h1 className="page-title">Enrichment Tasks</h1><div className="page-sub">{total} tasks total</div></div>
+                        <div style={{ display: 'flex', gap: 6 }}><button className="btn btn-secondary btn-sm" onClick={function(){clearTasks('completed');}}>Clear Done</button><button className="btn btn-danger btn-sm" onClick={function(){clearTasks('all');}}>Clear All</button></div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                        {['', 'queued', 'running', 'completed', 'failed'].map(function(s) { return <button key={s} className={'btn btn-sm ' + (statusFilter === s ? 'btn-primary' : 'btn-secondary')} onClick={function(){setStatusFilter(s);setPage(1);}}>{s || 'All'}</button>; })}
+                    </div>
+                    <div className="card" style={{ overflow: 'auto' }}>
+                        {loading ? <div className="loading">Loading tasks</div> : tasks.length === 0 ? <div className="empty">No tasks found</div> : (
+                            <table><thead><tr><th>ID</th><th>Type</th><th>Wine</th><th>Status</th><th>Celery ID</th><th>Created</th><th>Actions</th></tr></thead>
+                            <tbody>{tasks.map(function(t) { return (
+                                <tr key={t.id}><td>{t.id}</td><td><span className="badge badge-blue">{t.task_type}</span></td><td style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.wine_name || '\u2014'}</td><td>{statusBadge(t.status)}</td><td style={{ fontSize: 11, color: '#636366', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.celery_task_id || '\u2014'}</td><td style={{ fontSize: 12 }}>{t.created_at ? new Date(t.created_at).toLocaleString() : '\u2014'}</td><td>{(t.status === 'queued' || t.status === 'running') && <button className="btn btn-danger btn-sm" onClick={function(){cancelTask(t.id);}}>Cancel</button>}</td></tr>); })}</tbody></table>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function CrawlerPage() {
+            const [status, setStatus] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [query, setQuery] = useState('');
+            const [target, setTarget] = useState('all_unenriched');
+            var loadStatus = useCallback(function() { api('/crawler/status').then(setStatus).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
+            useEffect(function() { loadStatus(); var iv = setInterval(loadStatus, 15000); return function(){clearInterval(iv);}; }, [loadStatus]);
+            var startCrawler = async function() { try { var body = { target: target }; if (target === 'custom') body.query = query; await api('/crawler/start', { method: 'POST', body: JSON.stringify(body) }); showToast('Crawler started', 'success'); loadStatus(); } catch(e) { showToast(e.message, 'error'); } };
+            var stopCrawler = async function() { try { await api('/crawler/stop', { method: 'POST' }); showToast('Crawler stopped', 'success'); loadStatus(); } catch(e) { showToast(e.message, 'error'); } };
+            return (
+                <div>
+                    <h1 className="page-title" style={{ marginBottom: 20 }}>Crawler Control</h1>
+                    <div className="grid-stats" style={{ marginBottom: 20 }}>
+                        <StatCard label="Active Crawls" value={status ? status.active_crawls : 0} change={status && status.active_crawls > 0 ? 'Running' : 'Idle'} changeType={status && status.active_crawls > 0 ? 'positive' : undefined} />
+                        <StatCard label="Total Crawls" value={status ? status.total_crawls : 0} />
+                        <StatCard label="Completed" value={status ? status.completed_crawls : 0} />
+                        <div className="stat-card"><div style={{ fontSize: 12, color: '#8e8e93' }}>SearXNG</div><div style={{ fontSize: 18, fontWeight: 600, margin: '6px 0' }}><span className={'health-dot ' + (status && status.searxng_status === 'connected' ? 'ok' : 'err')}></span>{status ? status.searxng_status : 'unknown'}</div></div>
+                    </div>
+                    <div className="card" style={{ marginBottom: 16 }}><div className="section-title">Start New Crawl</div>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                            <div className="form-group" style={{ marginBottom: 0 }}><label className="label">Target</label><select className="input" style={{ width: 200 }} value={target} onChange={function(e){setTarget(e.target.value);}}><option value="all_unenriched">All Unenriched</option><option value="custom">Custom Query</option></select></div>
+                            {target === 'custom' && <div className="form-group" style={{ marginBottom: 0, flex: 1 }}><label className="label">Search Query</label><input className="input" placeholder="e.g. Barolo DOCG" value={query} onChange={function(e){setQuery(e.target.value);}} /></div>}
+                            <button className="btn btn-primary" onClick={startCrawler}>Start Crawler</button>
+                            <button className="btn btn-danger" onClick={stopCrawler}>Stop All</button>
+                        </div>
+                    </div>
+                    {status && status.last_crawl && (<div className="card"><div className="section-title">Last Crawl</div><div style={{ fontSize: 13 }}><div><span style={{ color: '#8e8e93' }}>Type:</span> {status.last_crawl.task_type}</div><div><span style={{ color: '#8e8e93' }}>Target:</span> {status.last_crawl.wine_name}</div><div><span style={{ color: '#8e8e93' }}>Status:</span> {status.last_crawl.status}</div><div><span style={{ color: '#8e8e93' }}>Created:</span> {status.last_crawl.created_at ? new Date(status.last_crawl.created_at).toLocaleString() : '\u2014'}</div>{status.last_crawl.error && <div style={{ color: '#ef4444', marginTop: 8 }}>Error: {status.last_crawl.error}</div>}</div></div>)}
+                </div>
+            );
+        }
+
+        function ReviewPage() {
+            const [wines, setWines] = useState([]);
+            const [total, setTotal] = useState(0);
+            const [loading, setLoading] = useState(true);
+            const [page, setPage] = useState(1);
+            var load = useCallback(function() { setLoading(true); api('/review?page=' + page + '&per_page=20').then(function(d){setWines(d.wines);setTotal(d.total);}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, [page]);
+            useEffect(function() { load(); }, [load]);
+            var approve = async function(id) { try { await api('/review/' + id + '/approve', { method: 'POST' }); showToast('Wine approved', 'success'); load(); } catch(e) { showToast(e.message, 'error'); } };
+            var reject = async function(id) { var reason = prompt('Rejection reason:'); if (reason === null) return; try { await api('/review/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason: reason }) }); showToast('Wine rejected', 'success'); load(); } catch(e) { showToast(e.message, 'error'); } };
+            return (
+                <div>
+                    <h1 className="page-title" style={{ marginBottom: 4 }}>Review Queue</h1>
+                    <div className="page-sub" style={{ marginBottom: 20 }}>{total} wines pending review</div>
+                    <div className="card" style={{ overflow: 'auto' }}>
+                        {loading ? <div className="loading">Loading review queue</div> : wines.length === 0 ? <div className="empty">All clear \u2014 no wines need review</div> : (
+                            <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Completeness</th><th>Notes</th><th>Actions</th></tr></thead>
+                            <tbody>{wines.map(function(w) { return (<tr key={w.id}><td style={{ color: '#fff', fontWeight: 500 }}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country || '\u2014'}</td><td>{w.completeness != null ? w.completeness.toFixed(0) + '%' : '\u2014'}</td><td style={{ fontSize: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.review_notes || '\u2014'}</td><td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-success btn-sm" onClick={function(){approve(w.id);}}>Approve</button><button className="btn btn-danger btn-sm" style={{ marginLeft: 4 }} onClick={function(){reject(w.id);}}>Reject</button></td></tr>); })}</tbody></table>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        function ChatPage() {
+            const [messages, setMessages] = useState([]);
+            const [input, setInput] = useState('');
+            const [sending, setSending] = useState(false);
+            const chatEnd = useRef(null);
+            useEffect(function() { if (chatEnd.current) chatEnd.current.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+            var send = async function() {
+                if (!input.trim() || sending) return;
+                var userMsg = { role: 'user', content: input.trim() };
+                setMessages(function(m) { return m.concat([userMsg]); }); setInput(''); setSending(true);
+                try {
+                    var history = messages.concat([userMsg]).slice(-10);
+                    var data = await api('/chat', { method: 'POST', body: JSON.stringify({ message: userMsg.content, history: history }) });
+                    setMessages(function(m) { return m.concat([{ role: 'assistant', content: data.response }]); });
+                } catch(e) { setMessages(function(m) { return m.concat([{ role: 'assistant', content: 'Error: ' + e.message }]); }); }
+                setSending(false);
+            };
+            return (
+                <div>
+                    <h1 className="page-title" style={{ marginBottom: 4 }}>AI Wine Assistant</h1>
+                    <div className="page-sub" style={{ marginBottom: 20 }}>Powered by Ollama \u2014 ask about wines, data quality, or recommendations</div>
+                    <div className="card" style={{ minHeight: 400, display: 'flex', flexDirection: 'column' }}>
+                        <div className="chat-messages" style={{ flex: 1 }}>
+                            {messages.length === 0 && <div className="empty" style={{ padding: 60 }}>Start a conversation about your wine database\u2026</div>}
+                            {messages.map(function(m, i) { return <div key={i} className={'chat-msg ' + m.role}>{m.content}</div>; })}
+                            {sending && <div className="chat-msg assistant" style={{ opacity: .6 }}>Thinking\u2026</div>}
+                            <div ref={chatEnd} />
+                        </div>
+                        <div style={{ display: 'flex', gap: 8, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.08)' }}>
+                            <input className="input" style={{ flex: 1 }} placeholder="Ask about wines\u2026" value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==='Enter')send();}} />
+                            <button className="btn btn-primary" onClick={send} disabled={sending || !input.trim()}>Send</button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function AnalyticsPage() {
+            const [stats, setStats] = useState(null);
+            const [loading, setLoading] = useState(true);
+            useEffect(function() { api('/stats').then(setStats).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
+            if (loading) return <div className="loading">Loading analytics</div>;
+            if (!stats) return <div className="empty">Failed to load analytics</div>;
+            var compData = Object.entries(stats.completeness_distribution || {}).map(function(e) { return { name: e[0], value: e[1] }; });
+            var typeData = Object.entries(stats.by_type || {}).map(function(e) { return { name: e[0], value: e[1] }; });
+            var countryData = Object.entries(stats.by_country || {}).map(function(e) { return { name: e[0], value: e[1] }; });
+            var methodData = Object.entries(stats.by_method || {}).map(function(e) { return { name: e[0] === 'none' ? 'Not enriched' : e[0], value: e[1] }; });
+            var timeline = (stats.timeline || []).map(function(d) { return { date: d.date.slice(5), count: d.count }; });
+            return (
+                <div>
+                    <h1 className="page-title" style={{ marginBottom: 20 }}>Analytics</h1>
+                    <div className="grid-stats">
+                        <StatCard label="Total Wines" value={stats.total} />
+                        <StatCard label="Enriched" value={stats.enriched} change={stats.total > 0 ? ((stats.enriched / stats.total) * 100).toFixed(0) + '% complete' : ''} changeType="positive" />
+                        <StatCard label="Unenriched" value={stats.unenriched} changeType={stats.unenriched > 0 ? 'negative' : 'positive'} />
+                    </div>
+                    <div className="grid-2" style={{ marginBottom: 16 }}>
+                        <div className="card"><div className="section-title">Completeness Distribution</div><ResponsiveContainer width="100%" height={200}><BarChart data={compData}><XAxis dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis tick={{ fill: '#8e8e93', fontSize: 11 }} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#0a84ff" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div>
+                        <div className="card"><div className="section-title">Data Methods</div>{methodData.length > 0 ? (<ResponsiveContainer width="100%" height={200}><PieChart><Pie data={methodData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={function(e){return e.name + ' ' + (e.percent*100).toFixed(0) + '%';}} labelLine={false} fontSize={10}>{methodData.map(function(_, i){return <Cell key={i} fill={COLORS[i % COLORS.length]} />;})}</Pie><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /></PieChart></ResponsiveContainer>) : <div className="empty">No data</div>}</div>
+                    </div>
+                    {timeline.length > 0 && (<div className="card" style={{ marginBottom: 16 }}><div className="section-title">Wines Added (Last 30 Days)</div><ResponsiveContainer width="100%" height={200}><AreaChart data={timeline}><CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" /><XAxis dataKey="date" tick={{ fill: '#8e8e93', fontSize: 10 }} /><YAxis tick={{ fill: '#8e8e93', fontSize: 11 }} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Area type="monotone" dataKey="count" stroke="#0a84ff" fill="rgba(10,132,255,.2)" /></AreaChart></ResponsiveContainer></div>)}
+                    <div className="card" style={{ marginBottom: 16 }}><div className="section-title">Average Tasting Scores</div>
+                        {stats.avg_scores && (<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>{Object.entries(stats.avg_scores).map(function(e) { var key = e[0], val = e[1]; return (<div key={key} style={{ textAlign: 'center' }}><div style={{ fontSize: 11, color: '#8e8e93', textTransform: 'capitalize', marginBottom: 4 }}>{key}</div><div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>{val.toFixed(1)}</div><div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 4, height: 4, marginTop: 6 }}><div style={{ background: '#0a84ff', borderRadius: 4, height: 4, width: Math.min(val, 100) + '%' }} /></div></div>); })}</div>)}
+                    </div>
+                    <div className="grid-2">
+                        <div className="card"><div className="section-title">By Type</div><ResponsiveContainer width="100%" height={200}><BarChart data={typeData}><XAxis dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis tick={{ fill: '#8e8e93', fontSize: 11 }} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#34d399" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div>
+                        <div className="card"><div className="section-title">By Country (Top 15)</div><ResponsiveContainer width="100%" height={200}><BarChart data={countryData} layout="vertical" margin={{ left: 70 }}><XAxis type="number" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis type="category" dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} width={65} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#fb923c" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer></div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SettingsPage() {
+            const [settings, setSettings] = useState({});
+            const [loading, setLoading] = useState(true);
+            const [saving, setSaving] = useState(false);
+            useEffect(function() { api('/settings').then(function(d){setSettings(d.settings || {});}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
+            var set = function(k, v) { setSettings(function(s) { return Object.assign({}, s, {[k]: v}); }); };
+            var save = async function() { setSaving(true); try { await api('/settings', { method: 'PUT', body: JSON.stringify({ settings: settings }) }); showToast('Settings saved', 'success'); } catch(e) { showToast(e.message, 'error'); } setSaving(false); };
+            if (loading) return <div className="loading">Loading settings</div>;
+            var fields = [
+                { key: 'ollama_model', label: 'Ollama Model', type: 'text' },
+                { key: 'ollama_url', label: 'Ollama URL', type: 'text' },
+                { key: 'searxng_url', label: 'SearXNG URL', type: 'text' },
+                { key: 'enrichment_batch_size', label: 'Enrichment Batch Size', type: 'number' },
+                { key: 'enrichment_schedule', label: 'Enrichment Schedule', type: 'select', options: ['manual', 'daily_2am', 'every_6h', 'every_12h'] },
+                { key: 'auto_review_threshold', label: 'Auto Review Threshold', type: 'number' },
+                { key: 'max_concurrent_tasks', label: 'Max Concurrent Tasks', type: 'number' }
+            ];
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                        <div><h1 className="page-title">Settings</h1><div className="page-sub">Configure enrichment, AI, and crawler settings</div></div>
+                        <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save Changes'}</button>
+                    </div>
+                    <div className="card" style={{ maxWidth: 560 }}>
+                        {fields.map(function(f) { return (<div className="form-group" key={f.key}><label className="label">{f.label}</label>{f.type === 'select' ? (<select className="input" value={settings[f.key] || ''} onChange={function(e){set(f.key, e.target.value);}}>{f.options.map(function(o){return <option key={o} value={o}>{o}</option>;})}</select>) : (<input className="input" type={f.type} value={settings[f.key] || ''} onChange={function(e){set(f.key, e.target.value);}} />)}</div>); })}
+                    </div>
+                </div>
+            );
+        }
+
+        function HealthPage() {
+            const [health, setHealth] = useState(null);
+            const [loading, setLoading] = useState(true);
+            var load = useCallback(function() { api('/system/health').then(setHealth).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
+            useEffect(function() { load(); var iv = setInterval(load, 30000); return function(){clearInterval(iv);}; }, [load]);
+            if (loading) return <div className="loading">Checking system health</div>;
+            if (!health) return <div className="empty">Failed to load health status</div>;
+            var svcOrder = ['postgres', 'redis', 'ollama', 'searxng', 'celery'];
+            var svcLabels = { postgres: 'PostgreSQL', redis: 'Redis', ollama: 'Ollama AI', searxng: 'SearXNG Search', celery: 'Celery Workers' };
+            return (
+                <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                        <div><h1 className="page-title">System Health</h1><div className="page-sub">Last checked: {health.timestamp ? new Date(health.timestamp).toLocaleString() : 'now'}</div></div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className={'health-dot ' + (health.status === 'healthy' ? 'ok' : 'warn')}></span><span style={{ color: health.status === 'healthy' ? '#34d399' : '#fb923c', fontWeight: 600, fontSize: 14 }}>{health.status ? health.status.toUpperCase() : ''}</span><button className="btn btn-secondary btn-sm" style={{ marginLeft: 12 }} onClick={load}>Refresh</button></div>
+                    </div>
+                    <div style={{ display: 'grid', gap: 12 }}>
+                        {svcOrder.map(function(key) { var svc = health.services && health.services[key]; if (!svc) return null; var ok = svc.status === 'connected'; return (
+                            <div className="card" key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><span className={'health-dot ' + (ok ? 'ok' : 'err')}></span><div><div style={{ fontWeight: 600, color: '#fff', fontSize: 14 }}>{svcLabels[key] || key}</div><div style={{ fontSize: 12, color: '#8e8e93' }}>{svc.status}</div></div></div>
+                                <div style={{ textAlign: 'right', fontSize: 12 }}>{svc.models != null && <div style={{ color: '#8e8e93' }}>{svc.models} models loaded</div>}{svc.workers != null && <div style={{ color: '#8e8e93' }}>{svc.workers} workers active</div>}{svc.error && <div style={{ color: '#ef4444', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{svc.error}</div>}</div>
+                            </div>); })}
+                    </div>
+                </div>
+            );
+        }
+
+        var NAV_ITEMS = [
+            { id: 'dashboard', label: 'Dashboard', icon: '\u25c9' },
+            { id: 'wines', label: 'Wines', icon: '\ud83c\udf77' },
+            { id: 'tasks', label: 'Enrichment', icon: '\u26a1' },
+            { id: 'crawler', label: 'Crawler', icon: '\ud83d\udd0d' },
+            { id: 'review', label: 'Review Queue', icon: '\u2713' },
+            { id: 'chat', label: 'AI Chat', icon: '\ud83d\udcac' },
+            { id: 'analytics', label: 'Analytics', icon: '\ud83d\udcca' },
+            { id: 'settings', label: 'Settings', icon: '\u2699' },
+            { id: 'health', label: 'Health', icon: '\u2665' }
+        ];
+
+        function App() {
+            const [loggedIn, setLoggedIn] = useState(!!authToken);
+            const [tab, setTab] = useState('dashboard');
+            useEffect(function() { if (authToken) { api('/auth/me').catch(function() { authToken = null; localStorage.removeItem('vinosomm_token'); setLoggedIn(false); }); } }, []);
+            if (!loggedIn) return <LoginScreen onLogin={function(){setLoggedIn(true);}} />;
+            var logout = function() { authToken = null; localStorage.removeItem('vinosomm_token'); setLoggedIn(false); };
+            var pages = { dashboard: DashboardPage, wines: WinesPage, tasks: TasksPage, crawler: CrawlerPage, review: ReviewPage, chat: ChatPage, analytics: AnalyticsPage, settings: SettingsPage, health: HealthPage };
+            var Page = pages[tab] || DashboardPage;
+            return (
+                <div style={{ display: 'flex', height: '100vh' }}>
+                    <div style={{ width: 190, minWidth: 190, background: '#0c0c0c', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ padding: '18px 16px 12px', fontWeight: 700, fontSize: 15, color: '#fff' }}>vinosomm.ai</div>
+                        <nav style={{ flex: 1, paddingTop: 4 }}>{NAV_ITEMS.map(function(n) { return (<div key={n.id} className={'nav-item ' + (tab === n.id ? 'active' : '')} onClick={function(){setTab(n.id);}}><span>{n.icon}</span> {n.label}</div>); })}</nav>
+                        <div style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,.06)' }}><button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={logout}>Sign Out</button></div>
+                    </div>
+                    <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}><Page /></div>
+                    <div id="toast" className="toast" style={{ display: 'none' }}></div>
+                </div>
+            );
+        }
+
+        var root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
