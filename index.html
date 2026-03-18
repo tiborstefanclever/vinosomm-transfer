@@ -316,8 +316,8 @@
         function AiIntakeModal({ entityType, detectedData, onClose, onConfirm }) {
             const [selected, setSelected] = useState(function() {
                 const s = new Set();
-                if (detectedData && detectedData.new_items) {
-                    detectedData.new_items.forEach(function(item) { s.add(item.name); });
+                if (detectedData && detectedData.items) {
+                    detectedData.items.forEach(function(item) { s.add(item); });
                 }
                 return s;
             });
@@ -332,8 +332,8 @@
 
             const handleSelectAll = function() {
                 const s = new Set();
-                if (detectedData && detectedData.new_items) {
-                    detectedData.new_items.forEach(function(item) { s.add(item.name); });
+                if (detectedData && detectedData.items) {
+                    detectedData.items.forEach(function(item) { s.add(item); });
                 }
                 setSelected(s);
             };
@@ -357,8 +357,8 @@
                 });
             };
 
-            const newCount = detectedData && detectedData.new_items ? detectedData.new_items.length : 0;
-            const existingCount = detectedData && detectedData.existing_items ? detectedData.existing_items.length : 0;
+            const newCount = detectedData && detectedData.items ? detectedData.items.length : 0;
+            const existingCount = detectedData && detectedData.existing ? detectedData.existing.length : 0;
 
             return (
                 <div className="overlay" onClick={onClose}>
@@ -371,17 +371,17 @@
                         <div style={{ marginBottom: 16 }}>
                             <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 8 }}>New Items ({newCount})</div>
                             <div className="ai-intake-list">
-                                {detectedData && detectedData.new_items && detectedData.new_items.length > 0 ? (
-                                    detectedData.new_items.map(function(item) {
+                                {detectedData && detectedData.items && detectedData.items.length > 0 ? (
+                                    detectedData.items.map(function(item) {
                                         return (
-                                            <div key={item.name} className="ai-intake-item">
+                                            <div key={item} className="ai-intake-item">
                                                 <input
                                                     type="checkbox"
                                                     className="ai-intake-checkbox"
-                                                    checked={selected.has(item.name)}
-                                                    onChange={function() { handleToggle(item.name); }}
+                                                    checked={selected.has(item)}
+                                                    onChange={function() { handleToggle(item); }}
                                                 />
-                                                <div className="ai-intake-label">{item.name}</div>
+                                                <div className="ai-intake-label">{item}</div>
                                             </div>
                                         );
                                     })
@@ -395,7 +395,7 @@
                             <div style={{ marginBottom: 16 }}>
                                 <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 8 }}>Already Exist ({existingCount})</div>
                                 <div className="ai-intake-list">
-                                    {detectedData && detectedData.existing_items && detectedData.existing_items.map(function(item) {
+                                    {detectedData && detectedData.existing && detectedData.existing.map(function(item) {
                                         return (
                                             <div key={item.name} className="ai-intake-item existing">
                                                 <input type="checkbox" className="ai-intake-checkbox" disabled checked={false} />
@@ -926,7 +926,7 @@
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                         <div className="ai-intake-input-group" style={{ flex: 1, minWidth: 250 }}>
                             <input className="input ai-intake-input" placeholder="Type wine name or paste URL..." value={aiInput} onChange={function(e){ setAiInput(e.target.value); }} />
-                            <button className="btn btn-primary" onClick={handleAiDetect} disabled={aiLoading}>{aiLoading ? 'Detecting\u2026' : 'Detect'}</button>
+                            <button className="btn btn-primary" onClick={handleAiDetect} disabled={aiLoading}>{aiLoading ? 'Adding\u2026' : 'AI Add'}</button>
                         </div>
                         <select className="input" style={{ width: 150 }} value={typeFilter} onChange={function(e){ setTypeFilter(e.target.value); setPage(1); }}><option value="">All Types</option><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select>
                         <select className="input" style={{ width: 150 }} value={countryFilter} onChange={function(e){ setCountryFilter(e.target.value); setPage(1); }}><option value="">All Countries</option><option value="France">France</option><option value="Italy">Italy</option><option value="Spain">Spain</option><option value="USA">USA</option></select>
@@ -1070,7 +1070,7 @@
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                         <div className="ai-intake-input-group" style={{ flex: 1, minWidth: 250 }}>
                             <input className="input ai-intake-input" placeholder="Type vineyard name or paste URL..." value={aiInput} onChange={function(e){ setAiInput(e.target.value); }} />
-                            <button className="btn btn-primary" onClick={handleAiDetect} disabled={aiLoading}>{aiLoading ? 'Detecting\u2026' : 'Detect'}</button>
+                            <button className="btn btn-primary" onClick={handleAiDetect} disabled={aiLoading}>{aiLoading ? 'Adding\u2026' : 'AI Add'}</button>
                         </div>
                         <select className="input" style={{ width: 150 }} value={countryFilter} onChange={function(e){ setCountryFilter(e.target.value); setPage(1); }}><option value="">All Countries</option><option value="France">France</option><option value="Italy">Italy</option><option value="Spain">Spain</option><option value="USA">USA</option></select>
                         <select className="input" style={{ width: 150 }} value={regionFilter} onChange={function(e){ setRegionFilter(e.target.value); setPage(1); }}><option value="">All Regions</option><option value="Bordeaux">Bordeaux</option><option value="Burgundy">Burgundy</option><option value="Napa">Napa</option></select>
