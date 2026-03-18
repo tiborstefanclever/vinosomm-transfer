@@ -1,0 +1,45 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "admin_api.py"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H 72.62.63.125 >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy frontend
+        run: |
+          if [ -f index.html ] && [ $(wc -c < index.html) -gt 1000 ]; then
+            echo "Deploying index.html ($(wc -c < index.html) bytes)"
+            scp -i ~/.ssh/deploy_key index.html root@72.62.63.125:/opt/vinosomm/admin/index.html
+          fi
+
+      - name: Deploy backend
+        run: |
+          if [ -f admin_api.py ]; then
+            echo "Deploying admin_api.py ($(wc -c < admin_api.py) bytes)"
+            scp -i ~/.ssh/deploy_key admin_api.py root@72.62.63.125:/opt/vinosomm/app/admin_api.py
+          fi
+
+      - name: Restart services
+        run: |
+          ssh -i ~/.ssh/deploy_key root@72.62.63.125 "cd /opt/vinosomm && docker compose restart api 2>/dev/null; echo done"
+
+      - name: Verify
+        run: |
+          sleep 3
+          ssh -i ~/.ssh/deploy_key root@72.62.63.125 "curl -s -o /dev/null -w HTTP_%{http_code} http://localhost/admin/"
