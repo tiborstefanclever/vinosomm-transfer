@@ -42,13 +42,16 @@
         textarea.input { resize: vertical; min-height: 60px; }
         .label { display: block; font-size: 12px; font-weight: 500; color: #8e8e93; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .5px; }
         table { width: 100%; border-collapse: collapse; }
-        th { padding: 10px 8px; text-align: left; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        th { padding: 10px 8px; text-align: left; font-size: 11px; font-weight: 600; color: #8e8e93; text-transform: uppercase; letter-spacing: .5px; border-bottom: 1px solid rgba(255,255,255,.1); white-space: nowrap; cursor: pointer; user-select: none; }
+        th:hover { color: #fff; }
         td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.04); font-size: 13px; }
         tr:hover td { background: rgba(255,255,255,.03); }
         .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 100; }
         .modal { background: #1c1c1e; border-radius: 14px; padding: 24px; width: 90%; max-width: 480px; max-height: 85vh; overflow-y: auto; }
+        .modal-wide { max-width: 700px; }
         .modal h3 { font-size: 17px; font-weight: 600; color: #fff; margin-bottom: 16px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
         .form-group { margin-bottom: 12px; }
         .toast { position: fixed; top: 20px; right: 20px; background: #1c1c1e; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; padding: 12px 16px; font-size: 13px; z-index: 200; animation: slideIn .3s; }
         @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -65,494 +68,169 @@
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
         .section-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 12px; }
         .health-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
-        .health-dot.ok { background: #34d399; }
-        .health-dot.warn { background: #fb923c; }
-        .health-dot.err { background: #ef4444; }
+        .health-dot.ok { background: #34d399; } .health-dot.warn { background: #fb923c; } .health-dot.err { background: #ef4444; }
         .pagination { display: flex; align-items: center; gap: 8px; justify-content: center; margin-top: 16px; }
         .page-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); background: transparent; color: #e5e5ea; cursor: pointer; font-size: 12px; }
-        .page-btn:hover { background: rgba(255,255,255,.08); }
-        .page-btn.active { background: #0a84ff; border-color: #0a84ff; color: #fff; }
-        .page-btn:disabled { opacity: .4; cursor: not-allowed; }
+        .page-btn:hover { background: rgba(255,255,255,.08); } .page-btn:disabled { opacity: .4; cursor: not-allowed; }
         .loading { display: flex; align-items: center; justify-content: center; padding: 40px; color: #8e8e93; }
         .loading::after { content: ''; width: 20px; height: 20px; border: 2px solid rgba(255,255,255,.1); border-top-color: #0a84ff; border-radius: 50%; margin-left: 10px; animation: spin .6s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .empty { text-align: center; padding: 40px; color: #636366; font-size: 14px; }
-        @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
-            .form-row { grid-template-columns: 1fr; }
-            .grid-stats { grid-template-columns: 1fr 1fr; }
-        }
+        .col-config-list { max-height: 400px; overflow-y: auto; }
+        .col-config-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 6px; cursor: grab; transition: background .1s; border: 1px solid transparent; }
+        .col-config-item:hover { background: rgba(255,255,255,.05); }
+        .col-config-item.dragging { opacity: .5; } .col-config-item.drag-over { border-top: 2px solid #0a84ff; }
+        .col-config-check { width: 16px; height: 16px; accent-color: #0a84ff; }
+        .col-config-group { font-size: 11px; font-weight: 600; color: #0a84ff; text-transform: uppercase; letter-spacing: .5px; padding: 12px 10px 4px; display: flex; justify-content: space-between; align-items: center; }
+        .cell-truncate { max-width: 180px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+        .cell-number { font-variant-numeric: tabular-nums; }
+        .wine-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .wine-detail-item { padding: 8px; background: rgba(255,255,255,.04); border-radius: 6px; }
+        .wine-detail-label { font-size: 10px; color: #8e8e93; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 2px; }
+        .wine-detail-value { font-size: 13px; color: #fff; word-break: break-word; }
+        .tab-bar { display: flex; gap: 2px; background: rgba(255,255,255,.05); border-radius: 8px; padding: 2px; margin-bottom: 16px; }
+        .tab-btn { flex: 1; padding: 6px 12px; border: none; background: transparent; color: #8e8e93; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; }
+        .tab-btn.active { background: rgba(10,132,255,.2); color: #0a84ff; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } .form-row, .form-row-3 { grid-template-columns: 1fr; } .grid-stats { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
     <div id="root"></div>
-
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef, useMemo } = React;
-        const { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend, AreaChart, Area } = Recharts;
-
+        const { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area } = Recharts;
         const API_BASE = '/admin/api';
         let authToken = localStorage.getItem('vinosomm_token') || null;
-
-        async function api(path, opts = {}) {
-            const headers = { 'Content-Type': 'application/json', ...opts.headers };
-            if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
-            const resp = await fetch(`${API_BASE}${path}`, { ...opts, headers });
-            if (resp.status === 401) { authToken = null; localStorage.removeItem('vinosomm_token'); throw new Error('Unauthorized'); }
-            if (!resp.ok) { const err = await resp.json().catch(() => ({})); throw new Error(err.detail || `HTTP ${resp.status}`); }
-            return resp.json();
-        }
-
+        async function api(path, opts = {}) { const headers = { 'Content-Type': 'application/json', ...opts.headers }; if (authToken) headers['Authorization'] = 'Bearer ' + authToken; const resp = await fetch(API_BASE + path, { ...opts, headers }); if (resp.status === 401) { authToken = null; localStorage.removeItem('vinosomm_token'); throw new Error('Unauthorized'); } if (!resp.ok) { const err = await resp.json().catch(function(){return {};}); throw new Error(err.detail || 'HTTP ' + resp.status); } return resp.json(); }
         let toastTimeout = null;
-        function showToast(msg, type = 'info') {
-            const el = document.getElementById('toast');
-            if (!el) return;
-            el.textContent = type === 'error' ? '\u2715 ' + msg : type === 'success' ? '\u2713 ' + msg : '\u2139 ' + msg;
-            el.style.display = 'block';
-            el.style.borderColor = type === 'error' ? '#ef4444' : type === 'success' ? '#34d399' : '#0a84ff';
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { el.style.display = 'none'; }, 3000);
-        }
+        function showToast(msg, type) { type = type || 'info'; const el = document.getElementById('toast'); if (!el) return; el.textContent = type === 'error' ? '\u2715 ' + msg : type === 'success' ? '\u2713 ' + msg : '\u2139 ' + msg; el.style.display = 'block'; el.style.borderColor = type === 'error' ? '#ef4444' : type === 'success' ? '#34d399' : '#0a84ff'; clearTimeout(toastTimeout); toastTimeout = setTimeout(function() { el.style.display = 'none'; }, 3000); }
 
-        function LoginScreen({ onLogin }) {
-            const [user, setUser] = useState('');
-            const [pass, setPass] = useState('');
-            const [loading, setLoading] = useState(false);
-            const [err, setErr] = useState('');
-            const submit = async (e) => {
-                e.preventDefault(); setLoading(true); setErr('');
-                try {
-                    const data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ username: user, password: pass }) });
-                    authToken = data.access_token; localStorage.setItem('vinosomm_token', authToken); onLogin();
-                } catch (ex) { setErr(ex.message); }
-                setLoading(false);
-            };
-            return (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}>
-                    <form onSubmit={submit} style={{ width: 320, textAlign: 'center' }}>
-                        <div style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 4 }}>vinosomm.ai</div>
-                        <div style={{ color: '#8e8e93', fontSize: 14, marginBottom: 32 }}>Admin Panel</div>
-                        <div className="form-group"><input className="input" placeholder="Username" value={user} onChange={e => setUser(e.target.value)} autoFocus /></div>
-                        <div className="form-group"><input className="input" type="password" placeholder="Password" value={pass} onChange={e => setPass(e.target.value)} /></div>
-                        {err && <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{err}</div>}
-                        <button className="btn btn-primary" style={{ width: '100%', padding: '10px 0' }} disabled={loading}>{loading ? 'Signing in\u2026' : 'Sign In'}</button>
-                    </form>
-                </div>
-            );
-        }
+        const ALL_COLUMNS = [
+            { key: 'id', label: 'ID', group: 'Basic', width: 50, format: 'number' },
+            { key: 'name', label: 'Name', group: 'Basic', width: 220 },
+            { key: 'producer', label: 'Producer', group: 'Basic', width: 160 },
+            { key: 'vintage', label: 'Vintage', group: 'Basic', width: 70, format: 'number' },
+            { key: 'region', label: 'Region', group: 'Basic', width: 140 },
+            { key: 'country', label: 'Country', group: 'Basic', width: 100 },
+            { key: 'grape_variety', label: 'Grape Variety', group: 'Basic', width: 140 },
+            { key: 'wine_type', label: 'Type', group: 'Basic', width: 90, format: 'badge' },
+            { key: 'classification', label: 'Classification', group: 'Basic', width: 140 },
+            { key: 'sweetness', label: 'Sweetness', group: 'Tasting', width: 80, format: 'decimal' },
+            { key: 'acidity', label: 'Acidity', group: 'Tasting', width: 80, format: 'decimal' },
+            { key: 'tannin', label: 'Tannin', group: 'Tasting', width: 80, format: 'decimal' },
+            { key: 'body', label: 'Body', group: 'Tasting', width: 80, format: 'decimal' },
+            { key: 'alcohol_warmth', label: 'Alc. Warmth', group: 'Tasting', width: 90, format: 'decimal' },
+            { key: 'effervescence', label: 'Efferves.', group: 'Tasting', width: 80, format: 'decimal' },
+            { key: 'flavor_intensity', label: 'Flavor Int.', group: 'Tasting', width: 90, format: 'decimal' },
+            { key: 'finish', label: 'Finish', group: 'Tasting', width: 70, format: 'decimal' },
+            { key: 'complexity', label: 'Complexity', group: 'Tasting', width: 85, format: 'decimal' },
+            { key: 'fruit_character', label: 'Fruit Character', group: 'Aromas', width: 180 },
+            { key: 'secondary_aromas', label: 'Secondary Aromas', group: 'Aromas', width: 180 },
+            { key: 'tertiary_notes', label: 'Tertiary Notes', group: 'Aromas', width: 180 },
+            { key: 'residual_sugar', label: 'Resid. Sugar', group: 'Technical', width: 90, format: 'decimal' },
+            { key: 'alcohol', label: 'Alcohol %', group: 'Technical', width: 80, format: 'decimal' },
+            { key: 'price', label: 'Price', group: 'Technical', width: 80, format: 'price' },
+            { key: 'currency', label: 'Currency', group: 'Technical', width: 70 },
+            { key: 'rating', label: 'Rating', group: 'Technical', width: 70, format: 'rating' },
+            { key: 'data_method', label: 'Data Method', group: 'Quality', width: 110 },
+            { key: 'source_list', label: 'Sources', group: 'Quality', width: 160 },
+            { key: 'source_count', label: 'Src Count', group: 'Quality', width: 80, format: 'number' },
+            { key: 'provenance_notes', label: 'Provenance', group: 'Quality', width: 160 },
+            { key: 'avg_confidence', label: 'Confidence', group: 'Quality', width: 85, format: 'percent' },
+            { key: 'completeness', label: 'Completeness', group: 'Quality', width: 95, format: 'percent' },
+            { key: 'needs_review', label: 'Needs Review', group: 'Review', width: 90, format: 'boolean' },
+            { key: 'review_notes', label: 'Review Notes', group: 'Review', width: 160 },
+            { key: 'created_at', label: 'Created', group: 'Dates', width: 130, format: 'date' },
+            { key: 'updated_at', label: 'Updated', group: 'Dates', width: 130, format: 'date' },
+        ];
+        const DEFAULT_VISIBLE = ['name', 'producer', 'wine_type', 'country', 'vintage', 'grape_variety', 'rating', 'price', 'completeness', 'alcohol'];
+        function getColumnConfig() { try { var s = localStorage.getItem('vinosomm_columns'); if (s) return JSON.parse(s); } catch(e) {} return { visible: DEFAULT_VISIBLE, order: ALL_COLUMNS.map(function(c){return c.key;}) }; }
+        function saveColumnConfig(cfg) { localStorage.setItem('vinosomm_columns', JSON.stringify(cfg)); }
+        function formatCell(value, format) { if (value == null || value === '') return '\u2014'; switch(format) { case 'number': return value; case 'decimal': return typeof value === 'number' ? value.toFixed(1) : value; case 'percent': return typeof value === 'number' ? value.toFixed(1) + '%' : value; case 'price': return typeof value === 'number' ? '$' + value.toFixed(2) : value; case 'rating': return typeof value === 'number' ? '\u2605 ' + value.toFixed(1) : value; case 'badge': return value; case 'boolean': return value ? 'Yes' : 'No'; case 'date': return value ? new Date(value).toLocaleDateString() : '\u2014'; default: return String(value); } }
 
-        function StatCard({ label, value, change, changeType }) {
-            return (
-                <div className="stat-card">
-                    <div style={{ fontSize: 12, color: '#8e8e93' }}>{label}</div>
-                    <div style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '6px 0' }}>{value}</div>
-                    {change && <div style={{ fontSize: 11, color: changeType === 'positive' ? '#34d399' : changeType === 'negative' ? '#ef4444' : '#8e8e93' }}>{change}</div>}
-                </div>
-            );
-        }
-
+        function LoginScreen({ onLogin }) { const [user, setUser] = useState(''); const [pass, setPass] = useState(''); const [loading, setLoading] = useState(false); const [err, setErr] = useState(''); const submit = async function(e) { e.preventDefault(); setLoading(true); setErr(''); try { var data = await api('/auth/login', { method: 'POST', body: JSON.stringify({ username: user, password: pass }) }); authToken = data.access_token; localStorage.setItem('vinosomm_token', authToken); onLogin(); } catch(ex) { setErr(ex.message); } setLoading(false); }; return (<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh' }}><form onSubmit={submit} style={{ width: 320, textAlign: 'center' }}><div style={{ fontSize: 32, fontWeight: 700, color: '#fff', marginBottom: 4 }}>vinosomm.ai</div><div style={{ color: '#8e8e93', fontSize: 14, marginBottom: 32 }}>Admin Panel</div><div className="form-group"><input className="input" placeholder="Username" value={user} onChange={function(e){setUser(e.target.value);}} autoFocus /></div><div className="form-group"><input className="input" type="password" placeholder="Password" value={pass} onChange={function(e){setPass(e.target.value);}} /></div>{err && <div style={{ color: '#ef4444', fontSize: 12, marginBottom: 12 }}>{err}</div>}<button className="btn btn-primary" style={{ width: '100%', padding: '10px 0' }} disabled={loading}>{loading ? 'Signing in\u2026' : 'Sign In'}</button></form></div>); }
+        function StatCard({ label, value, change, changeType }) { return (<div className="stat-card"><div style={{ fontSize: 12, color: '#8e8e93' }}>{label}</div><div style={{ fontSize: 26, fontWeight: 700, color: '#fff', margin: '6px 0' }}>{value}</div>{change && <div style={{ fontSize: 11, color: changeType === 'positive' ? '#34d399' : changeType === 'negative' ? '#ef4444' : '#8e8e93' }}>{change}</div>}</div>); }
         const COLORS = ['#0a84ff', '#34d399', '#fb923c', '#ef4444', '#a78bfa', '#f472b6', '#fbbf24', '#6ee7b7', '#818cf8', '#fb7185'];
 
-        function DashboardPage() {
-            const [data, setData] = useState(null);
-            const [loading, setLoading] = useState(true);
-            useEffect(() => { api('/dashboard').then(setData).catch(e => showToast(e.message, 'error')).finally(() => setLoading(false)); }, []);
-            if (loading) return <div className="loading">Loading dashboard</div>;
-            if (!data) return <div className="empty">Failed to load dashboard</div>;
-            const typeData = Object.entries(data.wines_by_type || {}).map(([name, value]) => ({ name, value }));
-            const countryData = Object.entries(data.wines_by_country || {}).map(([name, value]) => ({ name, value }));
-            return (
-                <div>
-                    <div style={{ marginBottom: 20 }}><h1 className="page-title">Dashboard</h1><div className="page-sub">Welcome back to vinosomm.ai Admin</div></div>
-                    <div className="grid-stats">
-                        <StatCard label="Total Wines" value={data.total_wines} change={'+' + data.wines_added_this_week + ' this week'} changeType="positive" />
-                        <StatCard label="Added Today" value={data.wines_added_today} change={'+' + data.wines_added_this_month + ' this month'} changeType="positive" />
-                        <StatCard label="Avg Completeness" value={(data.avg_completeness || 0).toFixed(1) + '%'} />
-                        <StatCard label="Needs Review" value={data.needs_review} changeType={data.needs_review > 0 ? 'negative' : 'positive'} change={data.needs_review > 0 ? 'Attention needed' : 'All clear'} />
-                    </div>
-                    <div className="grid-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
-                        <StatCard label="Tasks Queued" value={(data.task_stats && data.task_stats.queued) || 0} />
-                        <StatCard label="Tasks Running" value={(data.task_stats && data.task_stats.running) || 0} />
-                        <StatCard label="Tasks Done" value={(data.task_stats && data.task_stats.completed) || 0} />
-                        <StatCard label="Tasks Failed" value={(data.task_stats && data.task_stats.failed) || 0} />
-                    </div>
-                    <div className="grid-2" style={{ marginBottom: 16 }}>
-                        <div className="card"><div className="section-title">Wines by Type</div>
-                            {typeData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><PieChart><Pie data={typeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={function(e){ return e.name + ' ' + (e.percent*100).toFixed(0) + '%'; }} labelLine={false} fontSize={11}>{typeData.map(function(_, i){ return <Cell key={i} fill={COLORS[i % COLORS.length]} />; })}</Pie><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /></PieChart></ResponsiveContainer>) : <div className="empty">No data</div>}
-                        </div>
-                        <div className="card"><div className="section-title">Wines by Country</div>
-                            {countryData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><BarChart data={countryData} layout="vertical" margin={{ left: 60 }}><XAxis type="number" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis type="category" dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} width={55} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#0a84ff" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer>) : <div className="empty">No data</div>}
-                        </div>
-                    </div>
-                    <div className="card"><div className="section-title">Recent Wines</div>
-                        <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Vintage</th><th>Completeness</th></tr></thead>
-                        <tbody>{(data.recent_wines || []).map(function(w){ return (<tr key={w.id}><td style={{ color: '#fff', fontWeight: 500 }}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country}</td><td>{w.vintage}</td><td>{w.completeness != null ? w.completeness.toFixed(1) + '%' : '\u2014'}</td></tr>); })}</tbody></table>
-                    </div>
-                </div>
-            );
+        function ColumnConfigModal({ config, onSave, onClose }) {
+            const [visible, setVisible] = useState(new Set(config.visible));
+            const [order, setOrder] = useState(config.order);
+            const [dragIdx, setDragIdx] = useState(null);
+            const [dragOverIdx, setDragOverIdx] = useState(null);
+            var toggle = function(key) { var next = new Set(visible); if (next.has(key)) next.delete(key); else next.add(key); setVisible(next); };
+            var toggleGroup = function(groupName) { var gk = ALL_COLUMNS.filter(function(c){return c.group===groupName;}).map(function(c){return c.key;}); var allOn = gk.every(function(k){return visible.has(k);}); var next = new Set(visible); gk.forEach(function(k){ if(allOn) next.delete(k); else next.add(k); }); setVisible(next); };
+            var save = function() { onSave({ visible: Array.from(visible), order: order }); onClose(); };
+            var reset = function() { setVisible(new Set(DEFAULT_VISIBLE)); setOrder(ALL_COLUMNS.map(function(c){return c.key;})); };
+            var onDragEnd = function() { if (dragIdx !== null && dragOverIdx !== null && dragIdx !== dragOverIdx) { var next = order.slice(); var item = next.splice(dragIdx, 1)[0]; next.splice(dragOverIdx, 0, item); setOrder(next); } setDragIdx(null); setDragOverIdx(null); };
+            var flat = order.filter(function(k){ return ALL_COLUMNS.find(function(c){return c.key===k;}); });
+            return (<div className="overlay" onClick={onClose}><div className="modal modal-wide" onClick={function(e){e.stopPropagation();}}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}><h3 style={{ margin: 0 }}>Configure Columns</h3><div style={{ display: 'flex', gap: 6 }}><button className="btn btn-sm btn-secondary" onClick={function(){setVisible(new Set(ALL_COLUMNS.map(function(c){return c.key;})));}}>All</button><button className="btn btn-sm btn-secondary" onClick={function(){setVisible(new Set(['name']));}}>None</button><button className="btn btn-sm btn-secondary" onClick={reset}>Reset</button></div></div>
+                <div style={{ fontSize: 12, color: '#8e8e93', marginBottom: 12 }}>Check columns to show. Drag to reorder. {visible.size} of {ALL_COLUMNS.length} visible.</div>
+                <div className="col-config-list">{flat.map(function(key, idx) { var col = ALL_COLUMNS.find(function(c){return c.key===key;}); if (!col) return null; var prev = idx > 0 ? ALL_COLUMNS.find(function(c){return c.key===flat[idx-1];}) : null; var showGroup = !prev || prev.group !== col.group; return (<React.Fragment key={key}>{showGroup && <div className="col-config-group"><span>{col.group}</span><button className="btn btn-sm" style={{ padding: '2px 6px', fontSize: 10, background: 'rgba(255,255,255,.05)', color: '#8e8e93' }} onClick={function(){toggleGroup(col.group);}}>Toggle</button></div>}<div className={'col-config-item' + (dragIdx === idx ? ' dragging' : '') + (dragOverIdx === idx ? ' drag-over' : '')} draggable onDragStart={function(){setDragIdx(idx);}} onDragOver={function(e){e.preventDefault();setDragOverIdx(idx);}} onDragEnd={onDragEnd}><span style={{ color: '#636366', fontSize: 14, cursor: 'grab', padding: '0 4px' }}>{'\u2630'}</span><input type="checkbox" className="col-config-check" checked={visible.has(key)} onChange={function(){toggle(key);}} disabled={key==='name'} /><span style={{ flex: 1, fontSize: 13, color: '#e5e5ea' }}>{col.label}</span><span style={{ fontSize: 10, color: '#636366' }}>{col.key}</span></div></React.Fragment>); })}</div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}><button className="btn btn-primary" style={{ flex: 1 }} onClick={save}>Apply</button><button className="btn btn-secondary" onClick={onClose}>Cancel</button></div>
+            </div></div>);
+        }
+
+        function WineDetailModal({ wine, onClose, onEdit, onEnrich }) {
+            var groups = {}; ALL_COLUMNS.forEach(function(col){ if (!groups[col.group]) groups[col.group] = []; groups[col.group].push(col); });
+            return (<div className="overlay" onClick={onClose}><div className="modal modal-wide" onClick={function(e){e.stopPropagation();}} style={{ maxHeight: '90vh' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}><h3 style={{ margin: 0 }}>{wine.name || 'Wine Details'}</h3><div style={{ display: 'flex', gap: 6 }}><button className="btn btn-sm btn-primary" onClick={onEdit}>Edit</button><button className="btn btn-sm btn-success" onClick={onEnrich}>Enrich</button><button className="btn btn-sm btn-secondary" onClick={onClose}>{'\u2715'}</button></div></div>
+                {Object.entries(groups).map(function(entry){ var gn = entry[0], cols = entry[1]; return (<div key={gn} style={{ marginBottom: 16 }}><div style={{ fontSize: 11, fontWeight: 600, color: '#0a84ff', textTransform: 'uppercase', letterSpacing: '.5px', marginBottom: 6 }}>{gn}</div><div className="wine-detail-grid">{cols.map(function(col){ return (<div key={col.key} className="wine-detail-item"><div className="wine-detail-label">{col.label}</div><div className="wine-detail-value">{formatCell(wine[col.key], col.format)}</div></div>); })}</div></div>); })}
+            </div></div>);
+        }
+
+        function WineEditModal({ wine, onClose, onSaved }) {
+            const [form, setForm] = useState(wine || {}); const [saving, setSaving] = useState(false); const [tab, setTab] = useState('basic');
+            var set = function(k, v) { setForm(function(f){ return Object.assign({}, f, {[k]: v}); }); };
+            var save = async function() { if (!form.name || !form.wine_type) { showToast('Name and type required', 'error'); return; } setSaving(true); try { var body = Object.assign({}, form); ['vintage','source_count'].forEach(function(k){if(body[k])body[k]=parseInt(body[k]);}); ['sweetness','acidity','tannin','body','alcohol_warmth','effervescence','flavor_intensity','finish','complexity','residual_sugar','alcohol','price','rating','avg_confidence','completeness'].forEach(function(k){if(body[k]!=null&&body[k]!=='')body[k]=parseFloat(body[k]);}); if (wine && wine.id) await api('/wines/' + wine.id, { method: 'PUT', body: JSON.stringify(body) }); else await api('/wines', { method: 'POST', body: JSON.stringify(body) }); showToast(wine && wine.id ? 'Wine updated' : 'Wine created', 'success'); onSaved(); } catch(e) { showToast(e.message, 'error'); } setSaving(false); };
+            var tabs = { basic: 'Basic', tasting: 'Tasting', aromas: 'Aromas', technical: 'Technical', quality: 'Quality' };
+            return (<div className="overlay" onClick={onClose}><div className="modal modal-wide" onClick={function(e){e.stopPropagation();}}>
+                <h3>{wine && wine.id ? 'Edit Wine' : 'Add Wine'}</h3>
+                <div className="tab-bar">{Object.entries(tabs).map(function(e){ return <button key={e[0]} className={'tab-btn' + (tab === e[0] ? ' active' : '')} onClick={function(){setTab(e[0]);}}>{e[1]}</button>; })}</div>
+                {tab === 'basic' && <div><div className="form-group"><label className="label">Name *</label><input className="input" value={form.name || ''} onChange={function(e){set('name',e.target.value);}} /></div><div className="form-row"><div className="form-group"><label className="label">Type *</label><select className="input" value={form.wine_type || 'red'} onChange={function(e){set('wine_type',e.target.value);}}><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select></div><div className="form-group"><label className="label">Vintage</label><input className="input" type="number" value={form.vintage||''} onChange={function(e){set('vintage',e.target.value);}} /></div></div><div className="form-group"><label className="label">Producer</label><input className="input" value={form.producer||''} onChange={function(e){set('producer',e.target.value);}} /></div><div className="form-row"><div className="form-group"><label className="label">Region</label><input className="input" value={form.region||''} onChange={function(e){set('region',e.target.value);}} /></div><div className="form-group"><label className="label">Country</label><input className="input" value={form.country||''} onChange={function(e){set('country',e.target.value);}} /></div></div><div className="form-group"><label className="label">Grape Variety</label><input className="input" value={form.grape_variety||''} onChange={function(e){set('grape_variety',e.target.value);}} /></div><div className="form-group"><label className="label">Classification</label><input className="input" value={form.classification||''} onChange={function(e){set('classification',e.target.value);}} /></div></div>}
+                {tab === 'tasting' && <div className="form-row-3">{['sweetness','acidity','tannin','body','alcohol_warmth','effervescence','flavor_intensity','finish','complexity'].map(function(k){ return <div className="form-group" key={k}><label className="label">{k.replace(/_/g,' ')}</label><input className="input" type="number" step="0.1" value={form[k]!=null?form[k]:''} onChange={function(e){set(k,e.target.value);}} /></div>; })}</div>}
+                {tab === 'aromas' && <div><div className="form-group"><label className="label">Fruit Character</label><textarea className="input" value={form.fruit_character||''} onChange={function(e){set('fruit_character',e.target.value);}} /></div><div className="form-group"><label className="label">Secondary Aromas</label><textarea className="input" value={form.secondary_aromas||''} onChange={function(e){set('secondary_aromas',e.target.value);}} /></div><div className="form-group"><label className="label">Tertiary Notes</label><textarea className="input" value={form.tertiary_notes||''} onChange={function(e){set('tertiary_notes',e.target.value);}} /></div></div>}
+                {tab === 'technical' && <div><div className="form-row-3"><div className="form-group"><label className="label">Residual Sugar</label><input className="input" type="number" step="0.1" value={form.residual_sugar!=null?form.residual_sugar:''} onChange={function(e){set('residual_sugar',e.target.value);}} /></div><div className="form-group"><label className="label">Alcohol %</label><input className="input" type="number" step="0.1" value={form.alcohol!=null?form.alcohol:''} onChange={function(e){set('alcohol',e.target.value);}} /></div><div className="form-group"><label className="label">Rating</label><input className="input" type="number" step="0.1" value={form.rating!=null?form.rating:''} onChange={function(e){set('rating',e.target.value);}} /></div></div><div className="form-row"><div className="form-group"><label className="label">Price</label><input className="input" type="number" step="0.01" value={form.price!=null?form.price:''} onChange={function(e){set('price',e.target.value);}} /></div><div className="form-group"><label className="label">Currency</label><input className="input" value={form.currency||''} onChange={function(e){set('currency',e.target.value);}} /></div></div></div>}
+                {tab === 'quality' && <div><div className="form-row"><div className="form-group"><label className="label">Data Method</label><input className="input" value={form.data_method||''} onChange={function(e){set('data_method',e.target.value);}} /></div><div className="form-group"><label className="label">Source Count</label><input className="input" type="number" value={form.source_count!=null?form.source_count:''} onChange={function(e){set('source_count',e.target.value);}} /></div></div><div className="form-group"><label className="label">Source List</label><textarea className="input" value={form.source_list||''} onChange={function(e){set('source_list',e.target.value);}} /></div><div className="form-group"><label className="label">Provenance Notes</label><textarea className="input" value={form.provenance_notes||''} onChange={function(e){set('provenance_notes',e.target.value);}} /></div><div className="form-row"><div className="form-group"><label className="label">Confidence</label><input className="input" type="number" step="0.1" value={form.avg_confidence!=null?form.avg_confidence:''} onChange={function(e){set('avg_confidence',e.target.value);}} /></div><div className="form-group"><label className="label">Completeness %</label><input className="input" type="number" step="0.1" value={form.completeness!=null?form.completeness:''} onChange={function(e){set('completeness',e.target.value);}} /></div></div></div>}
+                <div style={{ display: 'flex', gap: 8, marginTop: 16 }}><button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save'}</button><button className="btn btn-secondary" onClick={onClose}>Cancel</button></div>
+            </div></div>);
         }
 
         function WinesPage() {
-            const [wines, setWines] = useState([]);
-            const [total, setTotal] = useState(0);
-            const [page, setPage] = useState(1);
-            const [totalPages, setTotalPages] = useState(1);
-            const [search, setSearch] = useState('');
-            const [typeFilter, setTypeFilter] = useState('');
-            const [countryFilter, setCountryFilter] = useState('');
-            const [sortBy, setSortBy] = useState('created_at');
-            const [sortDir, setSortDir] = useState('desc');
-            const [loading, setLoading] = useState(true);
-            const [showAdd, setShowAdd] = useState(false);
-            const [editWine, setEditWine] = useState(null);
-            const searchTimeout = useRef(null);
-            const loadWines = useCallback(function() {
-                setLoading(true);
-                var params = new URLSearchParams({ page: page, per_page: 20, sort_by: sortBy, sort_dir: sortDir });
-                if (search) params.set('search', search);
-                if (typeFilter) params.set('wine_type', typeFilter);
-                if (countryFilter) params.set('country', countryFilter);
-                api('/wines?' + params).then(function(d) { setWines(d.wines); setTotal(d.total); setTotalPages(d.total_pages); }).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); });
-            }, [page, search, typeFilter, countryFilter, sortBy, sortDir]);
-            useEffect(function() { loadWines(); }, [loadWines]);
-            var handleSearch = function(val) { clearTimeout(searchTimeout.current); searchTimeout.current = setTimeout(function() { setSearch(val); setPage(1); }, 300); };
-            var deleteWine = async function(id) { if (!confirm('Delete this wine?')) return; try { await api('/wines/' + id, { method: 'DELETE' }); showToast('Wine deleted', 'success'); loadWines(); } catch(e) { showToast(e.message, 'error'); } };
-            var handleSort = function(col) { if (sortBy === col) setSortDir(function(d) { return d === 'asc' ? 'desc' : 'asc'; }); else { setSortBy(col); setSortDir('asc'); } setPage(1); };
-            var sortIcon = function(col) { return sortBy === col ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : ''; };
-            return (
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <div><h1 className="page-title">Wine Inventory</h1><div className="page-sub">{total} wines total</div></div>
-                        <button className="btn btn-primary" onClick={function() { setEditWine(null); setShowAdd(true); }}>+ Add Wine</button>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                        <input className="input" style={{ maxWidth: 240 }} placeholder="Search wines\u2026" onChange={function(e) { handleSearch(e.target.value); }} />
-                        <select className="input" style={{ maxWidth: 140 }} value={typeFilter} onChange={function(e) { setTypeFilter(e.target.value); setPage(1); }}><option value="">All Types</option><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select>
-                        <select className="input" style={{ maxWidth: 140 }} value={countryFilter} onChange={function(e) { setCountryFilter(e.target.value); setPage(1); }}><option value="">All Countries</option><option value="France">France</option><option value="Italy">Italy</option><option value="Germany">Germany</option><option value="Spain">Spain</option><option value="USA">USA</option><option value="Australia">Australia</option><option value="Portugal">Portugal</option><option value="New Zealand">New Zealand</option></select>
-                    </div>
-                    <div className="card" style={{ overflow: 'auto' }}>
-                        {loading ? <div className="loading">Loading wines</div> : wines.length === 0 ? <div className="empty">No wines found</div> : (
-                            <table><thead><tr>
-                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('name')}}>Name{sortIcon('name')}</th>
-                                <th>Producer</th>
-                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('wine_type')}}>Type{sortIcon('wine_type')}</th>
-                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('country')}}>Country{sortIcon('country')}</th>
-                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('vintage')}}>Vintage{sortIcon('vintage')}</th>
-                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('completeness')}}>Complete{sortIcon('completeness')}</th>
-                                <th style={{ cursor: 'pointer' }} onClick={function(){handleSort('rating')}}>Rating{sortIcon('rating')}</th>
-                                <th>Actions</th>
-                            </tr></thead>
-                            <tbody>{wines.map(function(w) { return (
-                                <tr key={w.id}>
-                                    <td style={{ color: '#fff', fontWeight: 500, maxWidth: 220, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.name}</td>
-                                    <td style={{ maxWidth: 140, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.producer || '\u2014'}</td>
-                                    <td><span className="badge badge-blue">{w.wine_type}</span></td>
-                                    <td>{w.country || '\u2014'}</td><td>{w.vintage || '\u2014'}</td>
-                                    <td>{w.completeness != null ? w.completeness.toFixed(0) + '%' : '\u2014'}</td>
-                                    <td>{w.rating ? '\u2605 ' + w.rating.toFixed(1) : '\u2014'}</td>
-                                    <td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-secondary btn-sm" onClick={function(){setEditWine(w);setShowAdd(true);}}>Edit</button><button className="btn btn-danger btn-sm" style={{ marginLeft: 4 }} onClick={function(){deleteWine(w.id);}}>&#10005;</button></td>
-                                </tr>); })}</tbody></table>
-                        )}
-                    </div>
-                    {totalPages > 1 && (<div className="pagination"><button className="page-btn" disabled={page <= 1} onClick={function(){setPage(function(p){return p-1;});}}>&#8592; Prev</button><span style={{ fontSize: 12, color: '#8e8e93' }}>Page {page} of {totalPages}</span><button className="page-btn" disabled={page >= totalPages} onClick={function(){setPage(function(p){return p+1;});}}>Next &#8594;</button></div>)}
-                    {showAdd && <WineModal wine={editWine} onClose={function(){setShowAdd(false);}} onSaved={function(){setShowAdd(false);loadWines();}} />}
-                </div>
-            );
+            const [wines, setWines] = useState([]); const [total, setTotal] = useState(0); const [page, setPage] = useState(1); const [totalPages, setTotalPages] = useState(1); const [search, setSearch] = useState(''); const [typeFilter, setTypeFilter] = useState(''); const [countryFilter, setCountryFilter] = useState(''); const [sortBy, setSortBy] = useState('created_at'); const [sortDir, setSortDir] = useState('desc'); const [loading, setLoading] = useState(true); const [colConfig, setColConfig] = useState(getColumnConfig); const [showColConfig, setShowColConfig] = useState(false); const [showEdit, setShowEdit] = useState(false); const [editWine, setEditWine] = useState(null); const [detailWine, setDetailWine] = useState(null); const searchTimeout = useRef(null);
+            var visibleCols = useMemo(function(){ var vis = new Set(colConfig.visible); return colConfig.order.filter(function(k){return vis.has(k);}).map(function(k){return ALL_COLUMNS.find(function(c){return c.key===k;});}).filter(Boolean); }, [colConfig]);
+            var loadWines = useCallback(function(){ setLoading(true); var params = new URLSearchParams({ page: page, per_page: 25, sort_by: sortBy, sort_dir: sortDir }); if (search) params.set('search', search); if (typeFilter) params.set('wine_type', typeFilter); if (countryFilter) params.set('country', countryFilter); api('/wines?' + params).then(function(d){ setWines(d.wines); setTotal(d.total); setTotalPages(d.total_pages); }).catch(function(e){ showToast(e.message, 'error'); }).finally(function(){ setLoading(false); }); }, [page, search, typeFilter, countryFilter, sortBy, sortDir]);
+            useEffect(function(){ loadWines(); }, [loadWines]);
+            var handleSearch = function(val) { clearTimeout(searchTimeout.current); searchTimeout.current = setTimeout(function(){ setSearch(val); setPage(1); }, 300); };
+            var deleteWine = async function(id, e) { e.stopPropagation(); if (!confirm('Delete this wine?')) return; try { await api('/wines/' + id, { method: 'DELETE' }); showToast('Wine deleted', 'success'); loadWines(); } catch(e) { showToast(e.message, 'error'); } };
+            var enrichWine = async function(id) { try { await api('/enrich/' + id, { method: 'POST' }); showToast('Enrichment started', 'success'); } catch(e) { showToast(e.message, 'error'); } };
+            var handleSort = function(col) { if (sortBy === col) setSortDir(function(d){ return d === 'asc' ? 'desc' : 'asc'; }); else { setSortBy(col); setSortDir('asc'); } setPage(1); };
+            var sortArrow = function(col) { return sortBy === col ? (sortDir === 'asc' ? ' \u2191' : ' \u2193') : ''; };
+            var saveColCfg = function(cfg) { setColConfig(cfg); saveColumnConfig(cfg); };
+            var renderCell = function(wine, col) { var val = wine[col.key]; if (col.format === 'badge' && val) return <span className="badge badge-blue">{val}</span>; if (col.format === 'boolean') return val ? <span className="badge badge-yellow">Yes</span> : <span className="badge badge-green">No</span>; var f = formatCell(val, col.format); if (col.key === 'name') return <span style={{ color: '#fff', fontWeight: 500 }}>{f}</span>; if (['decimal','number','percent','price','rating'].indexOf(col.format) >= 0) return <span className="cell-number">{f}</span>; return <span className="cell-truncate">{f}</span>; };
+            return (<div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}><div><h1 className="page-title">Wine Inventory</h1><div className="page-sub">{total} wines \u00b7 {visibleCols.length} columns</div></div><div style={{ display: 'flex', gap: 6 }}><button className="btn btn-secondary" onClick={function(){setShowColConfig(true);}}>{'\u2699'} Columns</button><button className="btn btn-primary" onClick={function(){setEditWine(null);setShowEdit(true);}}>+ Add Wine</button></div></div>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}><input className="input" style={{ maxWidth: 240 }} placeholder="Search wines\u2026" onChange={function(e){handleSearch(e.target.value);}} /><select className="input" style={{ maxWidth: 140 }} value={typeFilter} onChange={function(e){setTypeFilter(e.target.value);setPage(1);}}><option value="">All Types</option>{['red','white','sparkling','ros\u00e9','fortified','dessert'].map(function(t){return <option key={t} value={t}>{t}</option>;})}</select><select className="input" style={{ maxWidth: 140 }} value={countryFilter} onChange={function(e){setCountryFilter(e.target.value);setPage(1);}}><option value="">All Countries</option>{['France','Italy','Germany','Spain','USA','Australia','Portugal','New Zealand','Argentina','Chile'].map(function(c){return <option key={c} value={c}>{c}</option>;})}</select></div>
+                <div className="card" style={{ overflow: 'auto' }}>{loading ? <div className="loading">Loading wines</div> : wines.length === 0 ? <div className="empty">No wines found</div> : (<table><thead><tr>{visibleCols.map(function(col){return <th key={col.key} onClick={function(){handleSort(col.key);}} style={{ minWidth: col.width }}>{col.label}{sortArrow(col.key)}</th>;})}<th style={{ width: 90 }}>Actions</th></tr></thead><tbody>{wines.map(function(w){return (<tr key={w.id} onClick={function(){setDetailWine(w);}} style={{ cursor: 'pointer' }}>{visibleCols.map(function(col){return <td key={col.key}>{renderCell(w, col)}</td>;})}<td style={{ whiteSpace: 'nowrap' }} onClick={function(e){e.stopPropagation();}}><button className="btn btn-secondary btn-sm" onClick={function(e){e.stopPropagation();setEditWine(w);setShowEdit(true);}}>Edit</button><button className="btn btn-danger btn-sm" style={{ marginLeft: 4 }} onClick={function(e){deleteWine(w.id, e);}}>{'\u2715'}</button></td></tr>);})}</tbody></table>)}</div>
+                {totalPages > 1 && (<div className="pagination"><button className="page-btn" disabled={page <= 1} onClick={function(){setPage(function(p){return p-1;});}}>{'\u2190'} Prev</button><span style={{ fontSize: 12, color: '#8e8e93' }}>Page {page} of {totalPages}</span><button className="page-btn" disabled={page >= totalPages} onClick={function(){setPage(function(p){return p+1;});}}>{'\u2192'} Next</button></div>)}
+                {showColConfig && <ColumnConfigModal config={colConfig} onSave={saveColCfg} onClose={function(){setShowColConfig(false);}} />}
+                {showEdit && <WineEditModal wine={editWine} onClose={function(){setShowEdit(false);}} onSaved={function(){setShowEdit(false);loadWines();}} />}
+                {detailWine && <WineDetailModal wine={detailWine} onClose={function(){setDetailWine(null);}} onEdit={function(){setEditWine(detailWine);setDetailWine(null);setShowEdit(true);}} onEnrich={function(){enrichWine(detailWine.id);setDetailWine(null);}} />}
+            </div>);
         }
 
-        function WineModal({ wine, onClose, onSaved }) {
-            const [form, setForm] = useState(wine || { name: '', wine_type: 'red', producer: '', vintage: '', region: '', country: '', grape_variety: '', price: '', rating: '' });
-            const [saving, setSaving] = useState(false);
-            var set = function(k, v) { setForm(function(f) { return Object.assign({}, f, {[k]: v}); }); };
-            var save = async function() {
-                if (!form.name || !form.wine_type) { showToast('Name and type required', 'error'); return; }
-                setSaving(true);
-                try {
-                    var body = Object.assign({}, form);
-                    if (body.vintage) body.vintage = parseInt(body.vintage);
-                    if (body.price) body.price = parseFloat(body.price);
-                    if (body.rating) body.rating = parseFloat(body.rating);
-                    if (wine && wine.id) await api('/wines/' + wine.id, { method: 'PUT', body: JSON.stringify(body) });
-                    else await api('/wines', { method: 'POST', body: JSON.stringify(body) });
-                    showToast(wine && wine.id ? 'Wine updated' : 'Wine created', 'success'); onSaved();
-                } catch(e) { showToast(e.message, 'error'); }
-                setSaving(false);
-            };
-            return (
-                <div className="overlay" onClick={onClose}><div className="modal" onClick={function(e){e.stopPropagation();}}>
-                    <h3>{wine && wine.id ? 'Edit Wine' : 'Add Wine'}</h3>
-                    <div className="form-group"><label className="label">Name *</label><input className="input" value={form.name} onChange={function(e){set('name',e.target.value);}} /></div>
-                    <div className="form-row">
-                        <div className="form-group"><label className="label">Type *</label><select className="input" value={form.wine_type} onChange={function(e){set('wine_type',e.target.value);}}><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select></div>
-                        <div className="form-group"><label className="label">Vintage</label><input className="input" type="number" value={form.vintage || ''} onChange={function(e){set('vintage',e.target.value);}} /></div>
-                    </div>
-                    <div className="form-group"><label className="label">Producer</label><input className="input" value={form.producer || ''} onChange={function(e){set('producer',e.target.value);}} /></div>
-                    <div className="form-row">
-                        <div className="form-group"><label className="label">Region</label><input className="input" value={form.region || ''} onChange={function(e){set('region',e.target.value);}} /></div>
-                        <div className="form-group"><label className="label">Country</label><input className="input" value={form.country || ''} onChange={function(e){set('country',e.target.value);}} /></div>
-                    </div>
-                    <div className="form-group"><label className="label">Grape Variety</label><input className="input" value={form.grape_variety || ''} onChange={function(e){set('grape_variety',e.target.value);}} /></div>
-                    <div className="form-row">
-                        <div className="form-group"><label className="label">Price</label><input className="input" type="number" step="0.01" value={form.price || ''} onChange={function(e){set('price',e.target.value);}} /></div>
-                        <div className="form-group"><label className="label">Rating</label><input className="input" type="number" step="0.1" min="0" max="5" value={form.rating || ''} onChange={function(e){set('rating',e.target.value);}} /></div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}><button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save'}</button><button className="btn btn-secondary" onClick={onClose}>Cancel</button></div>
-                </div></div>
-            );
-        }
+        function DashboardPage() { const [data, setData] = useState(null); const [loading, setLoading] = useState(true); useEffect(function(){ api('/dashboard').then(setData).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []); if (loading) return <div className="loading">Loading dashboard</div>; if (!data) return <div className="empty">Failed to load dashboard</div>; var typeData = Object.entries(data.wines_by_type || {}).map(function(e){ return { name: e[0], value: e[1] }; }); var countryData = Object.entries(data.wines_by_country || {}).map(function(e){ return { name: e[0], value: e[1] }; }); return (<div><div style={{ marginBottom: 20 }}><h1 className="page-title">Dashboard</h1><div className="page-sub">Welcome back to vinosomm.ai Admin</div></div><div className="grid-stats"><StatCard label="Total Wines" value={data.total_wines} change={'+' + data.wines_added_this_week + ' this week'} changeType="positive" /><StatCard label="Added Today" value={data.wines_added_today} change={'+' + data.wines_added_this_month + ' this month'} changeType="positive" /><StatCard label="Avg Completeness" value={(data.avg_completeness||0).toFixed(1)+'%'} /><StatCard label="Needs Review" value={data.needs_review} changeType={data.needs_review > 0 ? 'negative' : 'positive'} change={data.needs_review > 0 ? 'Attention needed' : 'All clear'} /></div><div className="grid-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}><StatCard label="Tasks Queued" value={(data.task_stats&&data.task_stats.queued)||0} /><StatCard label="Tasks Running" value={(data.task_stats&&data.task_stats.running)||0} /><StatCard label="Tasks Done" value={(data.task_stats&&data.task_stats.completed)||0} /><StatCard label="Tasks Failed" value={(data.task_stats&&data.task_stats.failed)||0} /></div><div className="grid-2" style={{ marginBottom: 16 }}><div className="card"><div className="section-title">Wines by Type</div>{typeData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><PieChart><Pie data={typeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={function(e){return e.name+' '+(e.percent*100).toFixed(0)+'%';}} labelLine={false} fontSize={11}>{typeData.map(function(_,i){return <Cell key={i} fill={COLORS[i%COLORS.length]} />;})}</Pie><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /></PieChart></ResponsiveContainer>) : <div className="empty">No data</div>}</div><div className="card"><div className="section-title">Wines by Country</div>{countryData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><BarChart data={countryData} layout="vertical" margin={{left:60}}><XAxis type="number" tick={{fill:'#8e8e93',fontSize:11}} /><YAxis type="category" dataKey="name" tick={{fill:'#8e8e93',fontSize:11}} width={55} /><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /><Bar dataKey="value" fill="#0a84ff" radius={[0,4,4,0]} /></BarChart></ResponsiveContainer>) : <div className="empty">No data</div>}</div></div><div className="card"><div className="section-title">Recent Wines</div><table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Vintage</th><th>Completeness</th></tr></thead><tbody>{(data.recent_wines||[]).map(function(w){return (<tr key={w.id}><td style={{color:'#fff',fontWeight:500}}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country}</td><td>{w.vintage}</td><td>{w.completeness!=null ? w.completeness.toFixed(1)+'%' : '\u2014'}</td></tr>);})}</tbody></table></div></div>); }
 
-        function TasksPage() {
-            const [tasks, setTasks] = useState([]);
-            const [total, setTotal] = useState(0);
-            const [page, setPage] = useState(1);
-            const [statusFilter, setStatusFilter] = useState('');
-            const [loading, setLoading] = useState(true);
-            var loadTasks = useCallback(function() {
-                setLoading(true);
-                var params = new URLSearchParams({ page: page, per_page: 20 });
-                if (statusFilter) params.set('status_filter', statusFilter);
-                api('/tasks?' + params).then(function(d) { setTasks(d.tasks); setTotal(d.total); }).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); });
-            }, [page, statusFilter]);
-            useEffect(function() { loadTasks(); }, [loadTasks]);
-            useEffect(function() { var iv = setInterval(loadTasks, 10000); return function() { clearInterval(iv); }; }, [loadTasks]);
-            var cancelTask = async function(id) { try { await api('/tasks/' + id + '/cancel', { method: 'POST' }); showToast('Task cancelled', 'success'); loadTasks(); } catch(e) { showToast(e.message, 'error'); } };
-            var clearTasks = async function(type) { try { await api('/tasks/clear', { method: 'POST', body: JSON.stringify({ type: type }) }); showToast('Tasks cleared', 'success'); loadTasks(); } catch(e) { showToast(e.message, 'error'); } };
-            var statusBadge = function(s) { var map = { queued: 'badge-gray', running: 'badge-blue', completed: 'badge-green', failed: 'badge-red', cancelled: 'badge-yellow' }; return <span className={'badge ' + (map[s] || 'badge-gray')}>{s}</span>; };
-            return (
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <div><h1 className="page-title">Enrichment Tasks</h1><div className="page-sub">{total} tasks total</div></div>
-                        <div style={{ display: 'flex', gap: 6 }}><button className="btn btn-secondary btn-sm" onClick={function(){clearTasks('completed');}}>Clear Done</button><button className="btn btn-danger btn-sm" onClick={function(){clearTasks('all');}}>Clear All</button></div>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-                        {['', 'queued', 'running', 'completed', 'failed'].map(function(s) { return <button key={s} className={'btn btn-sm ' + (statusFilter === s ? 'btn-primary' : 'btn-secondary')} onClick={function(){setStatusFilter(s);setPage(1);}}>{s || 'All'}</button>; })}
-                    </div>
-                    <div className="card" style={{ overflow: 'auto' }}>
-                        {loading ? <div className="loading">Loading tasks</div> : tasks.length === 0 ? <div className="empty">No tasks found</div> : (
-                            <table><thead><tr><th>ID</th><th>Type</th><th>Wine</th><th>Status</th><th>Celery ID</th><th>Created</th><th>Actions</th></tr></thead>
-                            <tbody>{tasks.map(function(t) { return (
-                                <tr key={t.id}><td>{t.id}</td><td><span className="badge badge-blue">{t.task_type}</span></td><td style={{ maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.wine_name || '\u2014'}</td><td>{statusBadge(t.status)}</td><td style={{ fontSize: 11, color: '#636366', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.celery_task_id || '\u2014'}</td><td style={{ fontSize: 12 }}>{t.created_at ? new Date(t.created_at).toLocaleString() : '\u2014'}</td><td>{(t.status === 'queued' || t.status === 'running') && <button className="btn btn-danger btn-sm" onClick={function(){cancelTask(t.id);}}>Cancel</button>}</td></tr>); })}</tbody></table>
-                        )}
-                    </div>
-                </div>
-            );
-        }
+        function TasksPage() { const [tasks, setTasks] = useState([]); const [total, setTotal] = useState(0); const [page, setPage] = useState(1); const [statusFilter, setStatusFilter] = useState(''); const [loading, setLoading] = useState(true); var loadTasks = useCallback(function(){ setLoading(true); var params = new URLSearchParams({page:page,per_page:20}); if(statusFilter)params.set('status_filter',statusFilter); api('/tasks?'+params).then(function(d){setTasks(d.tasks);setTotal(d.total);}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); },[page,statusFilter]); useEffect(function(){loadTasks();},[loadTasks]); useEffect(function(){var iv=setInterval(loadTasks,10000);return function(){clearInterval(iv);};},[loadTasks]); var cancelTask=async function(id){try{await api('/tasks/'+id+'/cancel',{method:'POST'});showToast('Task cancelled','success');loadTasks();}catch(e){showToast(e.message,'error');}}; var clearTasks=async function(type){try{await api('/tasks/clear',{method:'POST',body:JSON.stringify({type:type})});showToast('Tasks cleared','success');loadTasks();}catch(e){showToast(e.message,'error');}}; var statusBadge=function(s){var map={queued:'badge-gray',running:'badge-blue',completed:'badge-green',failed:'badge-red',cancelled:'badge-yellow'};return <span className={'badge '+(map[s]||'badge-gray')}>{s}</span>;}; return (<div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}><div><h1 className="page-title">Enrichment Tasks</h1><div className="page-sub">{total} tasks total</div></div><div style={{display:'flex',gap:6}}><button className="btn btn-secondary btn-sm" onClick={function(){clearTasks('completed');}}>Clear Done</button><button className="btn btn-danger btn-sm" onClick={function(){clearTasks('all');}}>Clear All</button></div></div><div style={{display:'flex',gap:8,marginBottom:16}}>{['','queued','running','completed','failed'].map(function(s){return <button key={s} className={'btn btn-sm '+(statusFilter===s?'btn-primary':'btn-secondary')} onClick={function(){setStatusFilter(s);setPage(1);}}>{s||'All'}</button>;})}</div><div className="card" style={{overflow:'auto'}}>{loading?<div className="loading">Loading tasks</div>:tasks.length===0?<div className="empty">No tasks found</div>:(<table><thead><tr><th>ID</th><th>Type</th><th>Wine</th><th>Status</th><th>Celery ID</th><th>Created</th><th>Actions</th></tr></thead><tbody>{tasks.map(function(t){return (<tr key={t.id}><td>{t.id}</td><td><span className="badge badge-blue">{t.task_type}</span></td><td style={{maxWidth:200,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t.wine_name||'\u2014'}</td><td>{statusBadge(t.status)}</td><td style={{fontSize:11,color:'#636366',maxWidth:120,overflow:'hidden',textOverflow:'ellipsis'}}>{t.celery_task_id||'\u2014'}</td><td style={{fontSize:12}}>{t.created_at?new Date(t.created_at).toLocaleString():'\u2014'}</td><td>{(t.status==='queued'||t.status==='running')&&<button className="btn btn-danger btn-sm" onClick={function(){cancelTask(t.id);}}>Cancel</button>}</td></tr>);})}</tbody></table>)}</div></div>); }
+        function CrawlerPage() { const [status,setStatus]=useState(null);const [loading,setLoading]=useState(true);const [query,setQuery]=useState('');const [target,setTarget]=useState('all_unenriched'); var loadStatus=useCallback(function(){api('/crawler/status').then(setStatus).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);});},[]);useEffect(function(){loadStatus();var iv=setInterval(loadStatus,15000);return function(){clearInterval(iv);};},[loadStatus]);var startCrawler=async function(){try{var body={target:target};if(target==='custom')body.query=query;await api('/crawler/start',{method:'POST',body:JSON.stringify(body)});showToast('Crawler started','success');loadStatus();}catch(e){showToast(e.message,'error');}};var stopCrawler=async function(){try{await api('/crawler/stop',{method:'POST'});showToast('Crawler stopped','success');loadStatus();}catch(e){showToast(e.message,'error');}};return (<div><h1 className="page-title" style={{marginBottom:20}}>Crawler Control</h1><div className="grid-stats" style={{marginBottom:20}}><StatCard label="Active Crawls" value={status?status.active_crawls:0} change={status&&status.active_crawls>0?'Running':'Idle'} changeType={status&&status.active_crawls>0?'positive':undefined} /><StatCard label="Total Crawls" value={status?status.total_crawls:0} /><StatCard label="Completed" value={status?status.completed_crawls:0} /><div className="stat-card"><div style={{fontSize:12,color:'#8e8e93'}}>SearXNG</div><div style={{fontSize:18,fontWeight:600,margin:'6px 0'}}><span className={'health-dot '+(status&&status.searxng_status==='connected'?'ok':'err')}></span>{status?status.searxng_status:'unknown'}</div></div></div><div className="card" style={{marginBottom:16}}><div className="section-title">Start New Crawl</div><div style={{display:'flex',gap:8,alignItems:'flex-end',flexWrap:'wrap'}}><div className="form-group" style={{marginBottom:0}}><label className="label">Target</label><select className="input" style={{width:200}} value={target} onChange={function(e){setTarget(e.target.value);}}><option value="all_unenriched">All Unenriched</option><option value="custom">Custom Query</option></select></div>{target==='custom'&&<div className="form-group" style={{marginBottom:0,flex:1}}><label className="label">Search Query</label><input className="input" placeholder="e.g. Barolo DOCG" value={query} onChange={function(e){setQuery(e.target.value);}} /></div>}<button className="btn btn-primary" onClick={startCrawler}>Start Crawler</button><button className="btn btn-danger" onClick={stopCrawler}>Stop All</button></div></div>{status&&status.last_crawl&&(<div className="card"><div className="section-title">Last Crawl</div><div style={{fontSize:13}}><div><span style={{color:'#8e8e93'}}>Type:</span> {status.last_crawl.task_type}</div><div><span style={{color:'#8e8e93'}}>Target:</span> {status.last_crawl.wine_name}</div><div><span style={{color:'#8e8e93'}}>Status:</span> {status.last_crawl.status}</div><div><span style={{color:'#8e8e93'}}>Created:</span> {status.last_crawl.created_at?new Date(status.last_crawl.created_at).toLocaleString():'\u2014'}</div>{status.last_crawl.error&&<div style={{color:'#ef4444',marginTop:8}}>Error: {status.last_crawl.error}</div>}</div></div>)}</div>); }
+        function ReviewPage() { const [wines,setWines]=useState([]);const [total,setTotal]=useState(0);const [loading,setLoading]=useState(true);const [page,setPage]=useState(1);var load=useCallback(function(){setLoading(true);api('/review?page='+page+'&per_page=20').then(function(d){setWines(d.wines);setTotal(d.total);}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);});},[page]);useEffect(function(){load();},[load]);var approve=async function(id){try{await api('/review/'+id+'/approve',{method:'POST'});showToast('Wine approved','success');load();}catch(e){showToast(e.message,'error');}};var reject=async function(id){var reason=prompt('Rejection reason:');if(reason===null)return;try{await api('/review/'+id+'/reject',{method:'POST',body:JSON.stringify({reason:reason})});showToast('Wine rejected','success');load();}catch(e){showToast(e.message,'error');}};return (<div><h1 className="page-title" style={{marginBottom:4}}>Review Queue</h1><div className="page-sub" style={{marginBottom:20}}>{total} wines pending review</div><div className="card" style={{overflow:'auto'}}>{loading?<div className="loading">Loading</div>:wines.length===0?<div className="empty">All clear</div>:(<table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Completeness</th><th>Notes</th><th>Actions</th></tr></thead><tbody>{wines.map(function(w){return (<tr key={w.id}><td style={{color:'#fff',fontWeight:500}}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country||'\u2014'}</td><td>{w.completeness!=null?w.completeness.toFixed(0)+'%':'\u2014'}</td><td style={{fontSize:12,maxWidth:200,overflow:'hidden',textOverflow:'ellipsis'}}>{w.review_notes||'\u2014'}</td><td style={{whiteSpace:'nowrap'}}><button className="btn btn-success btn-sm" onClick={function(){approve(w.id);}}>Approve</button><button className="btn btn-danger btn-sm" style={{marginLeft:4}} onClick={function(){reject(w.id);}}>Reject</button></td></tr>);})}</tbody></table>)}</div></div>); }
+        function ChatPage() { const [messages,setMessages]=useState([]);const [input,setInput]=useState('');const [sending,setSending]=useState(false);const chatEnd=useRef(null);useEffect(function(){if(chatEnd.current)chatEnd.current.scrollIntoView({behavior:'smooth'});},[messages]);var send=async function(){if(!input.trim()||sending)return;var userMsg={role:'user',content:input.trim()};setMessages(function(m){return m.concat([userMsg]);});setInput('');setSending(true);try{var history=messages.concat([userMsg]).slice(-10);var data=await api('/chat',{method:'POST',body:JSON.stringify({message:userMsg.content,history:history})});setMessages(function(m){return m.concat([{role:'assistant',content:data.response}]);});}catch(e){setMessages(function(m){return m.concat([{role:'assistant',content:'Error: '+e.message}]);});}setSending(false);};return (<div><h1 className="page-title" style={{marginBottom:4}}>AI Wine Assistant</h1><div className="page-sub" style={{marginBottom:20}}>Powered by Ollama</div><div className="card" style={{minHeight:400,display:'flex',flexDirection:'column'}}><div className="chat-messages" style={{flex:1}}>{messages.length===0&&<div className="empty" style={{padding:60}}>Start a conversation\u2026</div>}{messages.map(function(m,i){return <div key={i} className={'chat-msg '+m.role}>{m.content}</div>;})}{sending&&<div className="chat-msg assistant" style={{opacity:.6}}>Thinking\u2026</div>}<div ref={chatEnd} /></div><div style={{display:'flex',gap:8,paddingTop:12,borderTop:'1px solid rgba(255,255,255,.08)'}}><input className="input" style={{flex:1}} placeholder="Ask about wines\u2026" value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==='Enter')send();}} /><button className="btn btn-primary" onClick={send} disabled={sending||!input.trim()}>Send</button></div></div></div>); }
+        function AnalyticsPage() { const [stats,setStats]=useState(null);const [loading,setLoading]=useState(true);useEffect(function(){api('/stats').then(setStats).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);});},[]);if(loading)return <div className="loading">Loading analytics</div>;if(!stats)return <div className="empty">Failed to load</div>;var compData=Object.entries(stats.completeness_distribution||{}).map(function(e){return{name:e[0],value:e[1]};});var typeData=Object.entries(stats.by_type||{}).map(function(e){return{name:e[0],value:e[1]};});var countryData=Object.entries(stats.by_country||{}).map(function(e){return{name:e[0],value:e[1]};});var methodData=Object.entries(stats.by_method||{}).map(function(e){return{name:e[0]==='none'?'Not enriched':e[0],value:e[1]};});var timeline=(stats.timeline||[]).map(function(d){return{date:d.date.slice(5),count:d.count};});return (<div><h1 className="page-title" style={{marginBottom:20}}>Analytics</h1><div className="grid-stats"><StatCard label="Total Wines" value={stats.total} /><StatCard label="Enriched" value={stats.enriched} change={stats.total>0?((stats.enriched/stats.total)*100).toFixed(0)+'% complete':''} changeType="positive" /><StatCard label="Unenriched" value={stats.unenriched} changeType={stats.unenriched>0?'negative':'positive'} /></div><div className="grid-2" style={{marginBottom:16}}><div className="card"><div className="section-title">Completeness</div><ResponsiveContainer width="100%" height={200}><BarChart data={compData}><XAxis dataKey="name" tick={{fill:'#8e8e93',fontSize:11}} /><YAxis tick={{fill:'#8e8e93',fontSize:11}} /><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /><Bar dataKey="value" fill="#0a84ff" radius={[4,4,0,0]} /></BarChart></ResponsiveContainer></div><div className="card"><div className="section-title">Data Methods</div>{methodData.length>0?(<ResponsiveContainer width="100%" height={200}><PieChart><Pie data={methodData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={function(e){return e.name+' '+(e.percent*100).toFixed(0)+'%';}} labelLine={false} fontSize={10}>{methodData.map(function(_,i){return <Cell key={i} fill={COLORS[i%COLORS.length]} />;})}</Pie><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /></PieChart></ResponsiveContainer>):<div className="empty">No data</div>}</div></div>{timeline.length>0&&(<div className="card" style={{marginBottom:16}}><div className="section-title">Wines Added (30d)</div><ResponsiveContainer width="100%" height={200}><AreaChart data={timeline}><CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" /><XAxis dataKey="date" tick={{fill:'#8e8e93',fontSize:10}} /><YAxis tick={{fill:'#8e8e93',fontSize:11}} /><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /><Area type="monotone" dataKey="count" stroke="#0a84ff" fill="rgba(10,132,255,.2)" /></AreaChart></ResponsiveContainer></div>)}<div className="card" style={{marginBottom:16}}><div className="section-title">Avg Tasting Scores</div>{stats.avg_scores&&(<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(140px, 1fr))',gap:12}}>{Object.entries(stats.avg_scores).map(function(e){var key=e[0],val=e[1];return (<div key={key} style={{textAlign:'center'}}><div style={{fontSize:11,color:'#8e8e93',textTransform:'capitalize',marginBottom:4}}>{key}</div><div style={{fontSize:22,fontWeight:700,color:'#fff'}}>{val.toFixed(1)}</div><div style={{background:'rgba(255,255,255,.08)',borderRadius:4,height:4,marginTop:6}}><div style={{background:'#0a84ff',borderRadius:4,height:4,width:Math.min(val,100)+'%'}} /></div></div>);})}</div>)}</div><div className="grid-2"><div className="card"><div className="section-title">By Type</div><ResponsiveContainer width="100%" height={200}><BarChart data={typeData}><XAxis dataKey="name" tick={{fill:'#8e8e93',fontSize:11}} /><YAxis tick={{fill:'#8e8e93',fontSize:11}} /><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /><Bar dataKey="value" fill="#34d399" radius={[4,4,0,0]} /></BarChart></ResponsiveContainer></div><div className="card"><div className="section-title">By Country</div><ResponsiveContainer width="100%" height={200}><BarChart data={countryData} layout="vertical" margin={{left:70}}><XAxis type="number" tick={{fill:'#8e8e93',fontSize:11}} /><YAxis type="category" dataKey="name" tick={{fill:'#8e8e93',fontSize:11}} width={65} /><Tooltip contentStyle={{background:'#2c2c2e',border:'none',borderRadius:8,fontSize:12}} /><Bar dataKey="value" fill="#fb923c" radius={[0,4,4,0]} /></BarChart></ResponsiveContainer></div></div></div>); }
+        function SettingsPage() { const [settings,setSettings]=useState({});const [loading,setLoading]=useState(true);const [saving,setSaving]=useState(false);useEffect(function(){api('/settings').then(function(d){setSettings(d.settings||{});}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);});},[]);var set=function(k,v){setSettings(function(s){return Object.assign({},s,{[k]:v});});};var save=async function(){setSaving(true);try{await api('/settings',{method:'PUT',body:JSON.stringify({settings:settings})});showToast('Settings saved','success');}catch(e){showToast(e.message,'error');}setSaving(false);};if(loading)return <div className="loading">Loading settings</div>;var fields=[{key:'ollama_model',label:'Ollama Model',type:'text'},{key:'ollama_url',label:'Ollama URL',type:'text'},{key:'searxng_url',label:'SearXNG URL',type:'text'},{key:'enrichment_batch_size',label:'Batch Size',type:'number'},{key:'enrichment_schedule',label:'Schedule',type:'select',options:['manual','daily_2am','every_6h','every_12h']},{key:'auto_review_threshold',label:'Review Threshold',type:'number'},{key:'max_concurrent_tasks',label:'Max Tasks',type:'number'}];return (<div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div><h1 className="page-title">Settings</h1><div className="page-sub">Configure enrichment, AI, and crawler</div></div><button className="btn btn-primary" onClick={save} disabled={saving}>{saving?'Saving\u2026':'Save Changes'}</button></div><div className="card" style={{maxWidth:560}}>{fields.map(function(f){return (<div className="form-group" key={f.key}><label className="label">{f.label}</label>{f.type==='select'?(<select className="input" value={settings[f.key]||''} onChange={function(e){set(f.key,e.target.value);}}>{f.options.map(function(o){return <option key={o} value={o}>{o}</option>;})}</select>):(<input className="input" type={f.type} value={settings[f.key]||''} onChange={function(e){set(f.key,e.target.value);}} />)}</div>);})}</div></div>); }
+        function HealthPage() { const [health,setHealth]=useState(null);const [loading,setLoading]=useState(true);var load=useCallback(function(){api('/system/health').then(setHealth).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);});},[]);useEffect(function(){load();var iv=setInterval(load,30000);return function(){clearInterval(iv);};},[load]);if(loading)return <div className="loading">Checking health</div>;if(!health)return <div className="empty">Failed</div>;var svcOrder=['postgres','redis','ollama','searxng','celery'];var svcLabels={postgres:'PostgreSQL',redis:'Redis',ollama:'Ollama AI',searxng:'SearXNG',celery:'Celery Workers'};return (<div><div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}><div><h1 className="page-title">System Health</h1><div className="page-sub">Last: {health.timestamp?new Date(health.timestamp).toLocaleString():'now'}</div></div><div style={{display:'flex',alignItems:'center',gap:8}}><span className={'health-dot '+(health.status==='healthy'?'ok':'warn')}></span><span style={{color:health.status==='healthy'?'#34d399':'#fb923c',fontWeight:600,fontSize:14}}>{health.status?health.status.toUpperCase():''}</span><button className="btn btn-secondary btn-sm" style={{marginLeft:12}} onClick={load}>Refresh</button></div></div><div style={{display:'grid',gap:12}}>{svcOrder.map(function(key){var svc=health.services&&health.services[key];if(!svc)return null;var ok=svc.status==='connected';return (<div className="card" key={key} style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><div style={{display:'flex',alignItems:'center',gap:12}}><span className={'health-dot '+(ok?'ok':'err')}></span><div><div style={{fontWeight:600,color:'#fff',fontSize:14}}>{svcLabels[key]||key}</div><div style={{fontSize:12,color:'#8e8e93'}}>{svc.status}</div></div></div><div style={{textAlign:'right',fontSize:12}}>{svc.models!=null&&<div style={{color:'#8e8e93'}}>{svc.models} models</div>}{svc.workers!=null&&<div style={{color:'#8e8e93'}}>{svc.workers} workers</div>}{svc.error&&<div style={{color:'#ef4444',maxWidth:300,overflow:'hidden',textOverflow:'ellipsis'}}>{svc.error}</div>}</div></div>);})}</div></div>); }
 
-        function CrawlerPage() {
-            const [status, setStatus] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const [query, setQuery] = useState('');
-            const [target, setTarget] = useState('all_unenriched');
-            var loadStatus = useCallback(function() { api('/crawler/status').then(setStatus).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
-            useEffect(function() { loadStatus(); var iv = setInterval(loadStatus, 15000); return function(){clearInterval(iv);}; }, [loadStatus]);
-            var startCrawler = async function() { try { var body = { target: target }; if (target === 'custom') body.query = query; await api('/crawler/start', { method: 'POST', body: JSON.stringify(body) }); showToast('Crawler started', 'success'); loadStatus(); } catch(e) { showToast(e.message, 'error'); } };
-            var stopCrawler = async function() { try { await api('/crawler/stop', { method: 'POST' }); showToast('Crawler stopped', 'success'); loadStatus(); } catch(e) { showToast(e.message, 'error'); } };
-            return (
-                <div>
-                    <h1 className="page-title" style={{ marginBottom: 20 }}>Crawler Control</h1>
-                    <div className="grid-stats" style={{ marginBottom: 20 }}>
-                        <StatCard label="Active Crawls" value={status ? status.active_crawls : 0} change={status && status.active_crawls > 0 ? 'Running' : 'Idle'} changeType={status && status.active_crawls > 0 ? 'positive' : undefined} />
-                        <StatCard label="Total Crawls" value={status ? status.total_crawls : 0} />
-                        <StatCard label="Completed" value={status ? status.completed_crawls : 0} />
-                        <div className="stat-card"><div style={{ fontSize: 12, color: '#8e8e93' }}>SearXNG</div><div style={{ fontSize: 18, fontWeight: 600, margin: '6px 0' }}><span className={'health-dot ' + (status && status.searxng_status === 'connected' ? 'ok' : 'err')}></span>{status ? status.searxng_status : 'unknown'}</div></div>
-                    </div>
-                    <div className="card" style={{ marginBottom: 16 }}><div className="section-title">Start New Crawl</div>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                            <div className="form-group" style={{ marginBottom: 0 }}><label className="label">Target</label><select className="input" style={{ width: 200 }} value={target} onChange={function(e){setTarget(e.target.value);}}><option value="all_unenriched">All Unenriched</option><option value="custom">Custom Query</option></select></div>
-                            {target === 'custom' && <div className="form-group" style={{ marginBottom: 0, flex: 1 }}><label className="label">Search Query</label><input className="input" placeholder="e.g. Barolo DOCG" value={query} onChange={function(e){setQuery(e.target.value);}} /></div>}
-                            <button className="btn btn-primary" onClick={startCrawler}>Start Crawler</button>
-                            <button className="btn btn-danger" onClick={stopCrawler}>Stop All</button>
-                        </div>
-                    </div>
-                    {status && status.last_crawl && (<div className="card"><div className="section-title">Last Crawl</div><div style={{ fontSize: 13 }}><div><span style={{ color: '#8e8e93' }}>Type:</span> {status.last_crawl.task_type}</div><div><span style={{ color: '#8e8e93' }}>Target:</span> {status.last_crawl.wine_name}</div><div><span style={{ color: '#8e8e93' }}>Status:</span> {status.last_crawl.status}</div><div><span style={{ color: '#8e8e93' }}>Created:</span> {status.last_crawl.created_at ? new Date(status.last_crawl.created_at).toLocaleString() : '\u2014'}</div>{status.last_crawl.error && <div style={{ color: '#ef4444', marginTop: 8 }}>Error: {status.last_crawl.error}</div>}</div></div>)}
-                </div>
-            );
-        }
-
-        function ReviewPage() {
-            const [wines, setWines] = useState([]);
-            const [total, setTotal] = useState(0);
-            const [loading, setLoading] = useState(true);
-            const [page, setPage] = useState(1);
-            var load = useCallback(function() { setLoading(true); api('/review?page=' + page + '&per_page=20').then(function(d){setWines(d.wines);setTotal(d.total);}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, [page]);
-            useEffect(function() { load(); }, [load]);
-            var approve = async function(id) { try { await api('/review/' + id + '/approve', { method: 'POST' }); showToast('Wine approved', 'success'); load(); } catch(e) { showToast(e.message, 'error'); } };
-            var reject = async function(id) { var reason = prompt('Rejection reason:'); if (reason === null) return; try { await api('/review/' + id + '/reject', { method: 'POST', body: JSON.stringify({ reason: reason }) }); showToast('Wine rejected', 'success'); load(); } catch(e) { showToast(e.message, 'error'); } };
-            return (
-                <div>
-                    <h1 className="page-title" style={{ marginBottom: 4 }}>Review Queue</h1>
-                    <div className="page-sub" style={{ marginBottom: 20 }}>{total} wines pending review</div>
-                    <div className="card" style={{ overflow: 'auto' }}>
-                        {loading ? <div className="loading">Loading review queue</div> : wines.length === 0 ? <div className="empty">All clear \u2014 no wines need review</div> : (
-                            <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Completeness</th><th>Notes</th><th>Actions</th></tr></thead>
-                            <tbody>{wines.map(function(w) { return (<tr key={w.id}><td style={{ color: '#fff', fontWeight: 500 }}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country || '\u2014'}</td><td>{w.completeness != null ? w.completeness.toFixed(0) + '%' : '\u2014'}</td><td style={{ fontSize: 12, maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis' }}>{w.review_notes || '\u2014'}</td><td style={{ whiteSpace: 'nowrap' }}><button className="btn btn-success btn-sm" onClick={function(){approve(w.id);}}>Approve</button><button className="btn btn-danger btn-sm" style={{ marginLeft: 4 }} onClick={function(){reject(w.id);}}>Reject</button></td></tr>); })}</tbody></table>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-
-        function ChatPage() {
-            const [messages, setMessages] = useState([]);
-            const [input, setInput] = useState('');
-            const [sending, setSending] = useState(false);
-            const chatEnd = useRef(null);
-            useEffect(function() { if (chatEnd.current) chatEnd.current.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-            var send = async function() {
-                if (!input.trim() || sending) return;
-                var userMsg = { role: 'user', content: input.trim() };
-                setMessages(function(m) { return m.concat([userMsg]); }); setInput(''); setSending(true);
-                try {
-                    var history = messages.concat([userMsg]).slice(-10);
-                    var data = await api('/chat', { method: 'POST', body: JSON.stringify({ message: userMsg.content, history: history }) });
-                    setMessages(function(m) { return m.concat([{ role: 'assistant', content: data.response }]); });
-                } catch(e) { setMessages(function(m) { return m.concat([{ role: 'assistant', content: 'Error: ' + e.message }]); }); }
-                setSending(false);
-            };
-            return (
-                <div>
-                    <h1 className="page-title" style={{ marginBottom: 4 }}>AI Wine Assistant</h1>
-                    <div className="page-sub" style={{ marginBottom: 20 }}>Powered by Ollama \u2014 ask about wines, data quality, or recommendations</div>
-                    <div className="card" style={{ minHeight: 400, display: 'flex', flexDirection: 'column' }}>
-                        <div className="chat-messages" style={{ flex: 1 }}>
-                            {messages.length === 0 && <div className="empty" style={{ padding: 60 }}>Start a conversation about your wine database\u2026</div>}
-                            {messages.map(function(m, i) { return <div key={i} className={'chat-msg ' + m.role}>{m.content}</div>; })}
-                            {sending && <div className="chat-msg assistant" style={{ opacity: .6 }}>Thinking\u2026</div>}
-                            <div ref={chatEnd} />
-                        </div>
-                        <div style={{ display: 'flex', gap: 8, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,.08)' }}>
-                            <input className="input" style={{ flex: 1 }} placeholder="Ask about wines\u2026" value={input} onChange={function(e){setInput(e.target.value);}} onKeyDown={function(e){if(e.key==='Enter')send();}} />
-                            <button className="btn btn-primary" onClick={send} disabled={sending || !input.trim()}>Send</button>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        function AnalyticsPage() {
-            const [stats, setStats] = useState(null);
-            const [loading, setLoading] = useState(true);
-            useEffect(function() { api('/stats').then(setStats).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
-            if (loading) return <div className="loading">Loading analytics</div>;
-            if (!stats) return <div className="empty">Failed to load analytics</div>;
-            var compData = Object.entries(stats.completeness_distribution || {}).map(function(e) { return { name: e[0], value: e[1] }; });
-            var typeData = Object.entries(stats.by_type || {}).map(function(e) { return { name: e[0], value: e[1] }; });
-            var countryData = Object.entries(stats.by_country || {}).map(function(e) { return { name: e[0], value: e[1] }; });
-            var methodData = Object.entries(stats.by_method || {}).map(function(e) { return { name: e[0] === 'none' ? 'Not enriched' : e[0], value: e[1] }; });
-            var timeline = (stats.timeline || []).map(function(d) { return { date: d.date.slice(5), count: d.count }; });
-            return (
-                <div>
-                    <h1 className="page-title" style={{ marginBottom: 20 }}>Analytics</h1>
-                    <div className="grid-stats">
-                        <StatCard label="Total Wines" value={stats.total} />
-                        <StatCard label="Enriched" value={stats.enriched} change={stats.total > 0 ? ((stats.enriched / stats.total) * 100).toFixed(0) + '% complete' : ''} changeType="positive" />
-                        <StatCard label="Unenriched" value={stats.unenriched} changeType={stats.unenriched > 0 ? 'negative' : 'positive'} />
-                    </div>
-                    <div className="grid-2" style={{ marginBottom: 16 }}>
-                        <div className="card"><div className="section-title">Completeness Distribution</div><ResponsiveContainer width="100%" height={200}><BarChart data={compData}><XAxis dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis tick={{ fill: '#8e8e93', fontSize: 11 }} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#0a84ff" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div>
-                        <div className="card"><div className="section-title">Data Methods</div>{methodData.length > 0 ? (<ResponsiveContainer width="100%" height={200}><PieChart><Pie data={methodData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={function(e){return e.name + ' ' + (e.percent*100).toFixed(0) + '%';}} labelLine={false} fontSize={10}>{methodData.map(function(_, i){return <Cell key={i} fill={COLORS[i % COLORS.length]} />;})}</Pie><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /></PieChart></ResponsiveContainer>) : <div className="empty">No data</div>}</div>
-                    </div>
-                    {timeline.length > 0 && (<div className="card" style={{ marginBottom: 16 }}><div className="section-title">Wines Added (Last 30 Days)</div><ResponsiveContainer width="100%" height={200}><AreaChart data={timeline}><CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,.06)" /><XAxis dataKey="date" tick={{ fill: '#8e8e93', fontSize: 10 }} /><YAxis tick={{ fill: '#8e8e93', fontSize: 11 }} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Area type="monotone" dataKey="count" stroke="#0a84ff" fill="rgba(10,132,255,.2)" /></AreaChart></ResponsiveContainer></div>)}
-                    <div className="card" style={{ marginBottom: 16 }}><div className="section-title">Average Tasting Scores</div>
-                        {stats.avg_scores && (<div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>{Object.entries(stats.avg_scores).map(function(e) { var key = e[0], val = e[1]; return (<div key={key} style={{ textAlign: 'center' }}><div style={{ fontSize: 11, color: '#8e8e93', textTransform: 'capitalize', marginBottom: 4 }}>{key}</div><div style={{ fontSize: 22, fontWeight: 700, color: '#fff' }}>{val.toFixed(1)}</div><div style={{ background: 'rgba(255,255,255,.08)', borderRadius: 4, height: 4, marginTop: 6 }}><div style={{ background: '#0a84ff', borderRadius: 4, height: 4, width: Math.min(val, 100) + '%' }} /></div></div>); })}</div>)}
-                    </div>
-                    <div className="grid-2">
-                        <div className="card"><div className="section-title">By Type</div><ResponsiveContainer width="100%" height={200}><BarChart data={typeData}><XAxis dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis tick={{ fill: '#8e8e93', fontSize: 11 }} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#34d399" radius={[4, 4, 0, 0]} /></BarChart></ResponsiveContainer></div>
-                        <div className="card"><div className="section-title">By Country (Top 15)</div><ResponsiveContainer width="100%" height={200}><BarChart data={countryData} layout="vertical" margin={{ left: 70 }}><XAxis type="number" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis type="category" dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} width={65} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#fb923c" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer></div>
-                    </div>
-                </div>
-            );
-        }
-
-        function SettingsPage() {
-            const [settings, setSettings] = useState({});
-            const [loading, setLoading] = useState(true);
-            const [saving, setSaving] = useState(false);
-            useEffect(function() { api('/settings').then(function(d){setSettings(d.settings || {});}).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
-            var set = function(k, v) { setSettings(function(s) { return Object.assign({}, s, {[k]: v}); }); };
-            var save = async function() { setSaving(true); try { await api('/settings', { method: 'PUT', body: JSON.stringify({ settings: settings }) }); showToast('Settings saved', 'success'); } catch(e) { showToast(e.message, 'error'); } setSaving(false); };
-            if (loading) return <div className="loading">Loading settings</div>;
-            var fields = [
-                { key: 'ollama_model', label: 'Ollama Model', type: 'text' },
-                { key: 'ollama_url', label: 'Ollama URL', type: 'text' },
-                { key: 'searxng_url', label: 'SearXNG URL', type: 'text' },
-                { key: 'enrichment_batch_size', label: 'Enrichment Batch Size', type: 'number' },
-                { key: 'enrichment_schedule', label: 'Enrichment Schedule', type: 'select', options: ['manual', 'daily_2am', 'every_6h', 'every_12h'] },
-                { key: 'auto_review_threshold', label: 'Auto Review Threshold', type: 'number' },
-                { key: 'max_concurrent_tasks', label: 'Max Concurrent Tasks', type: 'number' }
-            ];
-            return (
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                        <div><h1 className="page-title">Settings</h1><div className="page-sub">Configure enrichment, AI, and crawler settings</div></div>
-                        <button className="btn btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save Changes'}</button>
-                    </div>
-                    <div className="card" style={{ maxWidth: 560 }}>
-                        {fields.map(function(f) { return (<div className="form-group" key={f.key}><label className="label">{f.label}</label>{f.type === 'select' ? (<select className="input" value={settings[f.key] || ''} onChange={function(e){set(f.key, e.target.value);}}>{f.options.map(function(o){return <option key={o} value={o}>{o}</option>;})}</select>) : (<input className="input" type={f.type} value={settings[f.key] || ''} onChange={function(e){set(f.key, e.target.value);}} />)}</div>); })}
-                    </div>
-                </div>
-            );
-        }
-
-        function HealthPage() {
-            const [health, setHealth] = useState(null);
-            const [loading, setLoading] = useState(true);
-            var load = useCallback(function() { api('/system/health').then(setHealth).catch(function(e){showToast(e.message,'error');}).finally(function(){setLoading(false);}); }, []);
-            useEffect(function() { load(); var iv = setInterval(load, 30000); return function(){clearInterval(iv);}; }, [load]);
-            if (loading) return <div className="loading">Checking system health</div>;
-            if (!health) return <div className="empty">Failed to load health status</div>;
-            var svcOrder = ['postgres', 'redis', 'ollama', 'searxng', 'celery'];
-            var svcLabels = { postgres: 'PostgreSQL', redis: 'Redis', ollama: 'Ollama AI', searxng: 'SearXNG Search', celery: 'Celery Workers' };
-            return (
-                <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                        <div><h1 className="page-title">System Health</h1><div className="page-sub">Last checked: {health.timestamp ? new Date(health.timestamp).toLocaleString() : 'now'}</div></div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><span className={'health-dot ' + (health.status === 'healthy' ? 'ok' : 'warn')}></span><span style={{ color: health.status === 'healthy' ? '#34d399' : '#fb923c', fontWeight: 600, fontSize: 14 }}>{health.status ? health.status.toUpperCase() : ''}</span><button className="btn btn-secondary btn-sm" style={{ marginLeft: 12 }} onClick={load}>Refresh</button></div>
-                    </div>
-                    <div style={{ display: 'grid', gap: 12 }}>
-                        {svcOrder.map(function(key) { var svc = health.services && health.services[key]; if (!svc) return null; var ok = svc.status === 'connected'; return (
-                            <div className="card" key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}><span className={'health-dot ' + (ok ? 'ok' : 'err')}></span><div><div style={{ fontWeight: 600, color: '#fff', fontSize: 14 }}>{svcLabels[key] || key}</div><div style={{ fontSize: 12, color: '#8e8e93' }}>{svc.status}</div></div></div>
-                                <div style={{ textAlign: 'right', fontSize: 12 }}>{svc.models != null && <div style={{ color: '#8e8e93' }}>{svc.models} models loaded</div>}{svc.workers != null && <div style={{ color: '#8e8e93' }}>{svc.workers} workers active</div>}{svc.error && <div style={{ color: '#ef4444', maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>{svc.error}</div>}</div>
-                            </div>); })}
-                    </div>
-                </div>
-            );
-        }
-
-        var NAV_ITEMS = [
-            { id: 'dashboard', label: 'Dashboard', icon: '\u25c9' },
-            { id: 'wines', label: 'Wines', icon: '\ud83c\udf77' },
-            { id: 'tasks', label: 'Enrichment', icon: '\u26a1' },
-            { id: 'crawler', label: 'Crawler', icon: '\ud83d\udd0d' },
-            { id: 'review', label: 'Review Queue', icon: '\u2713' },
-            { id: 'chat', label: 'AI Chat', icon: '\ud83d\udcac' },
-            { id: 'analytics', label: 'Analytics', icon: '\ud83d\udcca' },
-            { id: 'settings', label: 'Settings', icon: '\u2699' },
-            { id: 'health', label: 'Health', icon: '\u2665' }
-        ];
-
-        function App() {
-            const [loggedIn, setLoggedIn] = useState(!!authToken);
-            const [tab, setTab] = useState('dashboard');
-            useEffect(function() { if (authToken) { api('/auth/me').catch(function() { authToken = null; localStorage.removeItem('vinosomm_token'); setLoggedIn(false); }); } }, []);
-            if (!loggedIn) return <LoginScreen onLogin={function(){setLoggedIn(true);}} />;
-            var logout = function() { authToken = null; localStorage.removeItem('vinosomm_token'); setLoggedIn(false); };
-            var pages = { dashboard: DashboardPage, wines: WinesPage, tasks: TasksPage, crawler: CrawlerPage, review: ReviewPage, chat: ChatPage, analytics: AnalyticsPage, settings: SettingsPage, health: HealthPage };
-            var Page = pages[tab] || DashboardPage;
-            return (
-                <div style={{ display: 'flex', height: '100vh' }}>
-                    <div style={{ width: 190, minWidth: 190, background: '#0c0c0c', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ padding: '18px 16px 12px', fontWeight: 700, fontSize: 15, color: '#fff' }}>vinosomm.ai</div>
-                        <nav style={{ flex: 1, paddingTop: 4 }}>{NAV_ITEMS.map(function(n) { return (<div key={n.id} className={'nav-item ' + (tab === n.id ? 'active' : '')} onClick={function(){setTab(n.id);}}><span>{n.icon}</span> {n.label}</div>); })}</nav>
-                        <div style={{ padding: 12, borderTop: '1px solid rgba(255,255,255,.06)' }}><button className="btn btn-secondary btn-sm" style={{ width: '100%' }} onClick={logout}>Sign Out</button></div>
-                    </div>
-                    <div style={{ flex: 1, overflowY: 'auto', padding: 24 }}><Page /></div>
-                    <div id="toast" className="toast" style={{ display: 'none' }}></div>
-                </div>
-            );
-        }
-
+        var NAV_ITEMS=[{id:'dashboard',label:'Dashboard',icon:'\u25c9'},{id:'wines',label:'Wines',icon:'\ud83c\udf77'},{id:'tasks',label:'Enrichment',icon:'\u26a1'},{id:'crawler',label:'Crawler',icon:'\ud83d\udd0d'},{id:'review',label:'Review Queue',icon:'\u2713'},{id:'chat',label:'AI Chat',icon:'\ud83d\udcac'},{id:'analytics',label:'Analytics',icon:'\ud83d\udcca'},{id:'settings',label:'Settings',icon:'\u2699'},{id:'health',label:'Health',icon:'\u2665'}];
+        function App() { const [loggedIn,setLoggedIn]=useState(!!authToken);const [tab,setTab]=useState('dashboard');useEffect(function(){if(authToken){api('/auth/me').catch(function(){authToken=null;localStorage.removeItem('vinosomm_token');setLoggedIn(false);});}},[]);if(!loggedIn)return <LoginScreen onLogin={function(){setLoggedIn(true);}} />;var logout=function(){authToken=null;localStorage.removeItem('vinosomm_token');setLoggedIn(false);};var pages={dashboard:DashboardPage,wines:WinesPage,tasks:TasksPage,crawler:CrawlerPage,review:ReviewPage,chat:ChatPage,analytics:AnalyticsPage,settings:SettingsPage,health:HealthPage};var Page=pages[tab]||DashboardPage;return (<div style={{display:'flex',height:'100vh'}}><div style={{width:190,minWidth:190,background:'#0c0c0c',borderRight:'1px solid rgba(255,255,255,.06)',display:'flex',flexDirection:'column'}}><div style={{padding:'18px 16px 12px',fontWeight:700,fontSize:15,color:'#fff'}}>vinosomm.ai</div><nav style={{flex:1,paddingTop:4}}>{NAV_ITEMS.map(function(n){return (<div key={n.id} className={'nav-item '+(tab===n.id?'active':'')} onClick={function(){setTab(n.id);}}><span>{n.icon}</span> {n.label}</div>);})}</nav><div style={{padding:12,borderTop:'1px solid rgba(255,255,255,.06)'}}><button className="btn btn-secondary btn-sm" style={{width:'100%'}} onClick={logout}>Sign Out</button></div></div><div style={{flex:1,overflowY:'auto',padding:24}}><Page /></div><div id="toast" className="toast" style={{display:'none'}}></div></div>); }
         var root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
