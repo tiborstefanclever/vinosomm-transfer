@@ -35,11 +35,11 @@ jobs:
             scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key admin_api.py root@72.62.63.125:/opt/vinosomm/app/admin_api.py
           fi
 
-      - name: Restart services
+      - name: Rebuild and restart services
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@72.62.63.125 "cd /opt/vinosomm && docker compose restart api 2>/dev/null; echo done"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@72.62.63.125 "cd /opt/vinosomm && docker compose up -d --build api 2>/dev/null; echo done"
 
       - name: Verify
         run: |
-          sleep 3
+          sleep 5
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key root@72.62.63.125 "curl -s -o /dev/null -w HTTP_%{http_code} http://localhost/admin/"
