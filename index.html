@@ -97,11 +97,22 @@
         .tab-bar { display: flex; gap: 2px; background: rgba(255,255,255,.05); border-radius: 8px; padding: 2px; margin-bottom: 16px; }
         .tab-btn { flex: 1; padding: 6px 12px; border: none; background: transparent; color: #8e8e93; font-size: 12px; font-weight: 500; border-radius: 6px; cursor: pointer; transition: all .15s; }
         .tab-btn.active { background: rgba(10,132,255,.2); color: #0a84ff; }
+        .ai-intake-input-group { display: flex; gap: 8px; margin-bottom: 16px; }
+        .ai-intake-input { flex: 1; }
+        .ai-intake-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(255,255,255,.04); border-radius: 8px; margin-bottom: 8px; }
+        .ai-intake-item.existing { opacity: 0.6; background: rgba(142,142,147,.1); }
+        .ai-intake-checkbox { width: 18px; height: 18px; accent-color: #0a84ff; cursor: pointer; flex-shrink: 0; }
+        .ai-intake-label { flex: 1; font-size: 13px; color: #fff; }
+        .ai-intake-label.existing { color: #8e8e93; }
+        .ai-intake-item.existing .ai-intake-checkbox { cursor: default; }
+        .ai-intake-list { max-height: 400px; overflow-y: auto; margin-bottom: 16px; }
+        .ai-intake-stats { padding: 12px; background: rgba(10,132,255,.1); border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #0a84ff; }
         @media (max-width: 768px) {
             .grid-2 { grid-template-columns: 1fr; }
             .form-row { grid-template-columns: 1fr; }
             .form-row-3 { grid-template-columns: 1fr; }
             .grid-stats { grid-template-columns: 1fr 1fr; }
+            .ai-intake-input-group { flex-direction: column; }
         }
     </style>
 </head>
@@ -132,7 +143,7 @@
             el.style.display = 'block';
             el.style.borderColor = type === 'error' ? '#ef4444' : type === 'success' ? '#34d399' : '#0a84ff';
             clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => { el.style.display = 'none'; }, 3000);
+            toastTimeout = setTimeout(function() { el.style.display = 'none'; }, 3000);
         }
 
         // ============================================================
@@ -234,17 +245,19 @@
         const DEFAULT_VISIBLE = ['name', 'producer', 'wine_type', 'country', 'vintage', 'grape_variety', 'rating', 'price', 'completeness', 'alcohol'];
         const DEFAULT_VINEYARD_VISIBLE = ['name', 'country', 'region', 'producer_type', 'grape_varieties', 'vineyard_hectares', 'avg_rating', 'farming_practice', 'quality_tier', 'completeness'];
 
-        function getColumnConfig(storageKey = 'vinosomm_columns') {
+        function getColumnConfig(storageKey) {
+            if (!storageKey) storageKey = 'vinosomm_columns';
             try {
                 const saved = localStorage.getItem(storageKey);
                 if (saved) return JSON.parse(saved);
             } catch(e) {}
             const allCols = storageKey === 'vinosomm_vineyard_columns' ? ALL_VINEYARD_COLUMNS : ALL_COLUMNS;
             const defaultVis = storageKey === 'vinosomm_vineyard_columns' ? DEFAULT_VINEYARD_VISIBLE : DEFAULT_VISIBLE;
-            return { visible: defaultVis, order: allCols.map(c => c.key) };
+            return { visible: defaultVis, order: allCols.map(function(c) { return c.key; }) };
         }
 
-        function saveColumnConfig(cfg, storageKey = 'vinosomm_columns') {
+        function saveColumnConfig(cfg, storageKey) {
+            if (!storageKey) storageKey = 'vinosomm_columns';
             localStorage.setItem(storageKey, JSON.stringify(cfg));
         }
 
@@ -296,6 +309,117 @@
         }
 
         const COLORS = ['#0a84ff', '#34d399', '#fb923c', '#ef4444', '#a78bfa', '#f472b6', '#fbbf24', '#6ee7b7', '#818cf8', '#fb7185'];
+
+        // ============================================================
+        // AI INTAKE MODAL (Reusable for both Wines and Vineyards)
+        // ============================================================
+        function AiIntakeModal({ entityType, detectedData, onClose, onConfirm }) {
+            const [selected, setSelected] = useState(function() {
+                const s = new Set();
+                if (detectedData && detectedData.new_items) {
+                    detectedData.new_items.forEach(function(item) { s.add(item.name); });
+                }
+                return s;
+            });
+            const [confirming, setConfirming] = useState(false);
+
+            const handleToggle = function(name) {
+                const next = new Set(selected);
+                if (next.has(name)) next.delete(name);
+                else next.add(name);
+                setSelected(next);
+            };
+
+            const handleSelectAll = function() {
+                const s = new Set();
+                if (detectedData && detectedData.new_items) {
+                    detectedData.new_items.forEach(function(item) { s.add(item.name); });
+                }
+                setSelected(s);
+            };
+
+            const handleDeselectAll = function() {
+                setSelected(new Set());
+            };
+
+            const handleConfirm = function() {
+                setConfirming(true);
+                api('/ai-intake/confirm', {
+                    method: 'POST',
+                    body: JSON.stringify({ items: Array.from(selected), entity_type: entityType })
+                }).then(function() {
+                    showToast('Items added successfully', 'success');
+                    onConfirm();
+                }).catch(function(e) {
+                    showToast(e.message, 'error');
+                }).finally(function() {
+                    setConfirming(false);
+                });
+            };
+
+            const newCount = detectedData && detectedData.new_items ? detectedData.new_items.length : 0;
+            const existingCount = detectedData && detectedData.existing_items ? detectedData.existing_items.length : 0;
+
+            return (
+                <div className="overlay" onClick={onClose}>
+                    <div className="modal modal-wide" onClick={function(e){ e.stopPropagation(); }}>
+                        <h3>AI Detected Items</h3>
+                        <div className="ai-intake-stats">
+                            Found {newCount} new, {existingCount} already exist
+                        </div>
+
+                        <div style={{ marginBottom: 16 }}>
+                            <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 8 }}>New Items ({newCount})</div>
+                            <div className="ai-intake-list">
+                                {detectedData && detectedData.new_items && detectedData.new_items.length > 0 ? (
+                                    detectedData.new_items.map(function(item) {
+                                        return (
+                                            <div key={item.name} className="ai-intake-item">
+                                                <input
+                                                    type="checkbox"
+                                                    className="ai-intake-checkbox"
+                                                    checked={selected.has(item.name)}
+                                                    onChange={function() { handleToggle(item.name); }}
+                                                />
+                                                <div className="ai-intake-label">{item.name}</div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div style={{ padding: 12, color: '#8e8e93', fontSize: 13 }}>No new items detected</div>
+                                )}
+                            </div>
+                        </div>
+
+                        {existingCount > 0 && (
+                            <div style={{ marginBottom: 16 }}>
+                                <div style={{ fontSize: 13, fontWeight: 500, color: '#fff', marginBottom: 8 }}>Already Exist ({existingCount})</div>
+                                <div className="ai-intake-list">
+                                    {detectedData && detectedData.existing_items && detectedData.existing_items.map(function(item) {
+                                        return (
+                                            <div key={item.name} className="ai-intake-item existing">
+                                                <input type="checkbox" className="ai-intake-checkbox" disabled checked={false} />
+                                                <div className="ai-intake-label existing">{item.name}</div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
+
+                        <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                            <button className="btn btn-sm btn-secondary" onClick={handleSelectAll}>Select All</button>
+                            <button className="btn btn-sm btn-secondary" onClick={handleDeselectAll}>Deselect All</button>
+                            <div style={{ flex: 1 }}></div>
+                            <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
+                            <button className="btn btn-primary" onClick={handleConfirm} disabled={confirming || selected.size === 0}>
+                                {confirming ? 'Adding\u2026' : 'Add Selected (' + selected.size + ')'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
         // ============================================================
         // REUSABLE COLUMN CONFIG MODAL
@@ -577,29 +701,28 @@
                         {tab === 'technical' && (
                             <React.Fragment>
                                 <div className="form-row">
+                                    <div className="form-group"><label className="label">Alcohol %</label><input className="input" type="number" step="0.1" value={form.alcohol || ''} onChange={function(e){ set('alcohol', e.target.value); }} /></div>
                                     <div className="form-group"><label className="label">Price</label><input className="input" type="number" step="0.01" value={form.price || ''} onChange={function(e){ set('price', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Rating</label><input className="input" type="number" step="0.1" value={form.rating || ''} onChange={function(e){ set('rating', e.target.value); }} /></div>
                                 </div>
                                 <div className="form-row">
-                                    <div className="form-group"><label className="label">Alcohol %</label><input className="input" type="number" step="0.1" value={form.alcohol || ''} onChange={function(e){ set('alcohol', e.target.value); }} /></div>
                                     <div className="form-group"><label className="label">Residual Sugar</label><input className="input" type="number" step="0.1" value={form.residual_sugar || ''} onChange={function(e){ set('residual_sugar', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Rating</label><input className="input" type="number" step="0.1" value={form.rating || ''} onChange={function(e){ set('rating', e.target.value); }} /></div>
                                 </div>
                             </React.Fragment>
                         )}
                         {tab === 'quality' && (
                             <React.Fragment>
                                 <div className="form-group"><label className="label">Data Method</label><input className="input" value={form.data_method || ''} onChange={function(e){ set('data_method', e.target.value); }} /></div>
-                                <div className="form-group"><label className="label">Sources</label><textarea className="input" value={form.source_list || ''} onChange={function(e){ set('source_list', e.target.value); }} /></div>
                                 <div className="form-row">
-                                    <div className="form-group"><label className="label">Confidence %</label><input className="input" type="number" step="0.1" value={form.avg_confidence || ''} onChange={function(e){ set('avg_confidence', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Completeness %</label><input className="input" type="number" step="0.1" value={form.completeness || ''} onChange={function(e){ set('completeness', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Avg Confidence</label><input className="input" type="number" step="0.1" value={form.avg_confidence || ''} onChange={function(e){ set('avg_confidence', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Completeness</label><input className="input" type="number" step="0.1" value={form.completeness || ''} onChange={function(e){ set('completeness', e.target.value); }} /></div>
                                 </div>
-                                <div className="form-group"><label className="label">Review Notes</label><textarea className="input" value={form.review_notes || ''} onChange={function(e){ set('review_notes', e.target.value); }} /></div>
+                                <div className="form-group"><label className="label">Needs Review</label><input type="checkbox" checked={form.needs_review || false} onChange={function(e){ set('needs_review', e.target.checked); }} style={{ width: 18, height: 18, accentColor: '#0a84ff' }} /></div>
                             </React.Fragment>
                         )}
 
-                        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save'}</button>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save Wine'}</button>
                             <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
                         </div>
                     </div>
@@ -620,8 +743,8 @@
                 if (!form.name) { showToast('Name required', 'error'); return; }
                 setSaving(true);
                 const body = Object.assign({}, form);
-                ['founded_year', 'vineyard_hectares', 'annual_production_bottles', 'source_count'].forEach(function(k) { if (body[k]) body[k] = parseInt(body[k]); });
-                ['annual_production_hl','price_range_min','price_range_max','avg_rating','vivino_rating','wine_searcher_avg','jancis_robinson_rating','robert_parker_rating','altitude_meters','avg_confidence','completeness'].forEach(function(k) { if (body[k] != null && body[k] !== '') body[k] = parseFloat(body[k]); });
+                ['founded_year', 'vineyard_hectares', 'annual_production_bottles', 'annual_production_hl', 'number_of_wines', 'altitude_meters', 'source_count'].forEach(function(k) { if (body[k]) body[k] = parseFloat(body[k]); });
+                ['avg_rating', 'vivino_rating', 'wine_searcher_avg', 'jancis_robinson_rating', 'robert_parker_rating', 'avg_confidence', 'completeness', 'price_range_min', 'price_range_max'].forEach(function(k) { if (body[k] != null && body[k] !== '') body[k] = parseFloat(body[k]); });
                 const method = vineyard && vineyard.id ? 'PUT' : 'POST';
                 const path = vineyard && vineyard.id ? '/vineyards/' + vineyard.id : '/vineyards';
                 api(path, { method: method, body: JSON.stringify(body) }).then(function() {
@@ -651,7 +774,7 @@
                                 <div className="form-group"><label className="label">Name *</label><input className="input" value={form.name || ''} onChange={function(e){ set('name', e.target.value); }} /></div>
                                 <div className="form-row">
                                     <div className="form-group"><label className="label">Short Name</label><input className="input" value={form.short_name || ''} onChange={function(e){ set('short_name', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Founded Year</label><input className="input" type="number" value={form.founded_year || ''} onChange={function(e){ set('founded_year', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Producer Type</label><input className="input" value={form.producer_type || ''} onChange={function(e){ set('producer_type', e.target.value); }} /></div>
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group"><label className="label">Country</label><input className="input" value={form.country || ''} onChange={function(e){ set('country', e.target.value); }} /></div>
@@ -659,31 +782,22 @@
                                 </div>
                                 <div className="form-row">
                                     <div className="form-group"><label className="label">Sub Region</label><input className="input" value={form.sub_region || ''} onChange={function(e){ set('sub_region', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Producer Type</label><input className="input" value={form.producer_type || ''} onChange={function(e){ set('producer_type', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Winemaker</label><input className="input" value={form.winemaker || ''} onChange={function(e){ set('winemaker', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Owner</label><input className="input" value={form.owner || ''} onChange={function(e){ set('owner', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Founded Year</label><input className="input" type="number" value={form.founded_year || ''} onChange={function(e){ set('founded_year', e.target.value); }} /></div>
                                 </div>
                             </React.Fragment>
                         )}
-
                         {tab === 'contact' && (
                             <React.Fragment>
+                                <div className="form-group"><label className="label">Winemaker</label><input className="input" value={form.winemaker || ''} onChange={function(e){ set('winemaker', e.target.value); }} /></div>
+                                <div className="form-group"><label className="label">Owner</label><input className="input" value={form.owner || ''} onChange={function(e){ set('owner', e.target.value); }} /></div>
                                 <div className="form-group"><label className="label">Address</label><input className="input" value={form.address || ''} onChange={function(e){ set('address', e.target.value); }} /></div>
                                 <div className="form-row">
+                                    <div className="form-group"><label className="label">Email</label><input className="input" value={form.email || ''} onChange={function(e){ set('email', e.target.value); }} /></div>
                                     <div className="form-group"><label className="label">Phone</label><input className="input" value={form.phone || ''} onChange={function(e){ set('phone', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Email</label><input className="input" type="email" value={form.email || ''} onChange={function(e){ set('email', e.target.value); }} /></div>
                                 </div>
                                 <div className="form-group"><label className="label">Website</label><input className="input" value={form.website_url || ''} onChange={function(e){ set('website_url', e.target.value); }} /></div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Instagram</label><input className="input" value={form.instagram_url || ''} onChange={function(e){ set('instagram_url', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Facebook</label><input className="input" value={form.facebook_url || ''} onChange={function(e){ set('facebook_url', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-group"><label className="label">Twitter</label><input className="input" value={form.twitter_url || ''} onChange={function(e){ set('twitter_url', e.target.value); }} /></div>
                             </React.Fragment>
                         )}
-
                         {tab === 'production' && (
                             <React.Fragment>
                                 <div className="form-group"><label className="label">Grape Varieties</label><input className="input" value={form.grape_varieties || ''} onChange={function(e){ set('grape_varieties', e.target.value); }} /></div>
@@ -691,20 +805,10 @@
                                 <div className="form-group"><label className="label">Wine Types</label><input className="input" value={form.wine_types || ''} onChange={function(e){ set('wine_types', e.target.value); }} /></div>
                                 <div className="form-row">
                                     <div className="form-group"><label className="label">Vineyard Hectares</label><input className="input" type="number" step="0.1" value={form.vineyard_hectares || ''} onChange={function(e){ set('vineyard_hectares', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Number of Wines</label><input className="input" type="number" value={form.number_of_wines || ''} onChange={function(e){ set('number_of_wines', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Annual Production (bottles)</label><input className="input" type="number" value={form.annual_production_bottles || ''} onChange={function(e){ set('annual_production_bottles', e.target.value); }} /></div>
                                 </div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Annual Bottles</label><input className="input" type="number" value={form.annual_production_bottles || ''} onChange={function(e){ set('annual_production_bottles', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Annual HL</label><input className="input" type="number" step="0.1" value={form.annual_production_hl || ''} onChange={function(e){ set('annual_production_hl', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Price Range Min</label><input className="input" type="number" step="0.01" value={form.price_range_min || ''} onChange={function(e){ set('price_range_min', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Price Range Max</label><input className="input" type="number" step="0.01" value={form.price_range_max || ''} onChange={function(e){ set('price_range_max', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-group"><label className="label">Export Markets</label><input className="input" value={form.export_markets || ''} onChange={function(e){ set('export_markets', e.target.value); }} /></div>
                             </React.Fragment>
                         )}
-
                         {tab === 'quality' && (
                             <React.Fragment>
                                 <div className="form-group"><label className="label">Quality Tier</label><input className="input" value={form.quality_tier || ''} onChange={function(e){ set('quality_tier', e.target.value); }} /></div>
@@ -712,46 +816,30 @@
                                     <div className="form-group"><label className="label">Avg Rating</label><input className="input" type="number" step="0.1" value={form.avg_rating || ''} onChange={function(e){ set('avg_rating', e.target.value); }} /></div>
                                     <div className="form-group"><label className="label">Vivino Rating</label><input className="input" type="number" step="0.1" value={form.vivino_rating || ''} onChange={function(e){ set('vivino_rating', e.target.value); }} /></div>
                                 </div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Wine Searcher Avg</label><input className="input" type="number" step="0.1" value={form.wine_searcher_avg || ''} onChange={function(e){ set('wine_searcher_avg', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Jancis Robinson</label><input className="input" type="number" step="0.1" value={form.jancis_robinson_rating || ''} onChange={function(e){ set('jancis_robinson_rating', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Robert Parker</label><input className="input" type="number" step="0.1" value={form.robert_parker_rating || ''} onChange={function(e){ set('robert_parker_rating', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-group"><label className="label">Rating Sources</label><input className="input" value={form.rating_sources || ''} onChange={function(e){ set('rating_sources', e.target.value); }} /></div>
-                                <div className="form-group"><label className="label">Awards</label><textarea className="input" value={form.awards || ''} onChange={function(e){ set('awards', e.target.value); }} /></div>
+                                <div className="form-group"><label className="label">Awards</label><input className="input" value={form.awards || ''} onChange={function(e){ set('awards', e.target.value); }} /></div>
                             </React.Fragment>
                         )}
-
                         {tab === 'terroir' && (
                             <React.Fragment>
                                 <div className="form-group"><label className="label">Farming Practice</label><input className="input" value={form.farming_practice || ''} onChange={function(e){ set('farming_practice', e.target.value); }} /></div>
                                 <div className="form-group"><label className="label">Certifications</label><input className="input" value={form.certifications || ''} onChange={function(e){ set('certifications', e.target.value); }} /></div>
-                                <div className="form-group"><label className="label">Soil Types</label><input className="input" value={form.soil_types || ''} onChange={function(e){ set('soil_types', e.target.value); }} /></div>
-                                <div className="form-row">
-                                    <div className="form-group"><label className="label">Climate</label><input className="input" value={form.climate || ''} onChange={function(e){ set('climate', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Altitude (m)</label><input className="input" type="number" value={form.altitude_meters || ''} onChange={function(e){ set('altitude_meters', e.target.value); }} /></div>
-                                </div>
-                                <div className="form-group"><label className="label">Sustainability Notes</label><textarea className="input" value={form.sustainability_notes || ''} onChange={function(e){ set('sustainability_notes', e.target.value); }} /></div>
+                                <div className="form-group"><label className="label">Climate</label><input className="input" value={form.climate || ''} onChange={function(e){ set('climate', e.target.value); }} /></div>
+                                <div className="form-group"><label className="label">Altitude (meters)</label><input className="input" type="number" value={form.altitude_meters || ''} onChange={function(e){ set('altitude_meters', e.target.value); }} /></div>
                             </React.Fragment>
                         )}
-
                         {tab === 'data' && (
                             <React.Fragment>
-                                <div className="form-group"><label className="label">Description</label><textarea className="input" value={form.description || ''} onChange={function(e){ set('description', e.target.value); }} /></div>
                                 <div className="form-group"><label className="label">Data Method</label><input className="input" value={form.data_method || ''} onChange={function(e){ set('data_method', e.target.value); }} /></div>
-                                <div className="form-group"><label className="label">Sources</label><textarea className="input" value={form.source_list || ''} onChange={function(e){ set('source_list', e.target.value); }} /></div>
                                 <div className="form-row">
-                                    <div className="form-group"><label className="label">Confidence %</label><input className="input" type="number" step="0.1" value={form.avg_confidence || ''} onChange={function(e){ set('avg_confidence', e.target.value); }} /></div>
-                                    <div className="form-group"><label className="label">Completeness %</label><input className="input" type="number" step="0.1" value={form.completeness || ''} onChange={function(e){ set('completeness', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Avg Confidence</label><input className="input" type="number" step="0.1" value={form.avg_confidence || ''} onChange={function(e){ set('avg_confidence', e.target.value); }} /></div>
+                                    <div className="form-group"><label className="label">Completeness</label><input className="input" type="number" step="0.1" value={form.completeness || ''} onChange={function(e){ set('completeness', e.target.value); }} /></div>
                                 </div>
-                                <div className="form-group"><label className="label">Review Notes</label><textarea className="input" value={form.review_notes || ''} onChange={function(e){ set('review_notes', e.target.value); }} /></div>
+                                <div className="form-group"><label className="label">Needs Review</label><input type="checkbox" checked={form.needs_review || false} onChange={function(e){ set('needs_review', e.target.checked); }} style={{ width: 18, height: 18, accentColor: '#0a84ff' }} /></div>
                             </React.Fragment>
                         )}
 
-                        <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save'}</button>
+                        <div style={{ display: 'flex', gap: 8, marginTop: 24 }}>
+                            <button className="btn btn-primary" style={{ flex: 1 }} onClick={save} disabled={saving}>{saving ? 'Saving\u2026' : 'Save Vineyard'}</button>
                             <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
                         </div>
                     </div>
@@ -778,6 +866,10 @@
             const [showEdit, setShowEdit] = useState(false);
             const [editWine, setEditWine] = useState(null);
             const [detailWine, setDetailWine] = useState(null);
+            const [aiInput, setAiInput] = useState('');
+            const [aiLoading, setAiLoading] = useState(false);
+            const [aiData, setAiData] = useState(null);
+            const [showAiModal, setShowAiModal] = useState(false);
             const searchTimeout = useRef(null);
 
             const visibleCols = useMemo(function() {
@@ -809,15 +901,37 @@
                 setPage(1);
             };
 
+            const handleAiDetect = function() {
+                if (!aiInput.trim()) { showToast('Enter vineyard name or URL', 'error'); return; }
+                setAiLoading(true);
+                api('/ai-intake', { method: 'POST', body: JSON.stringify({ input: aiInput, entity_type: 'wine' }) })
+                    .then(function(data) {
+                        setAiData(data);
+                        setShowAiModal(true);
+                    })
+                    .catch(function(e) { showToast(e.message, 'error'); })
+                    .finally(function() { setAiLoading(false); });
+            };
+
+            const handleAiConfirmed = function() {
+                setShowAiModal(false);
+                setAiInput('');
+                setAiData(null);
+                loadWines();
+            };
+
             return (
                 <div>
                     <div style={{ marginBottom: 20 }}><h1 className="page-title">Wines</h1><div className="page-sub">Manage wine catalog</div></div>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                        <input className="input" style={{ flex: 1, minWidth: 200 }} placeholder="Search wines..." value={search} onChange={function(e){ handleSearch(e.target.value); }} />
+                        <div className="ai-intake-input-group" style={{ flex: 1, minWidth: 250 }}>
+                            <input className="input ai-intake-input" placeholder="Type wine name or paste URL..." value={aiInput} onChange={function(e){ setAiInput(e.target.value); }} />
+                            <button className="btn btn-primary" onClick={handleAiDetect} disabled={aiLoading}>{aiLoading ? 'Detecting\u2026' : 'Detect'}</button>
+                        </div>
                         <select className="input" style={{ width: 150 }} value={typeFilter} onChange={function(e){ setTypeFilter(e.target.value); setPage(1); }}><option value="">All Types</option><option value="red">Red</option><option value="white">White</option><option value="sparkling">Sparkling</option><option value="ros\u00e9">Ros\u00e9</option><option value="fortified">Fortified</option><option value="dessert">Dessert</option></select>
                         <select className="input" style={{ width: 150 }} value={countryFilter} onChange={function(e){ setCountryFilter(e.target.value); setPage(1); }}><option value="">All Countries</option><option value="France">France</option><option value="Italy">Italy</option><option value="Spain">Spain</option><option value="USA">USA</option></select>
                         <button className="btn btn-secondary" onClick={function(){ setShowColConfig(true); }}>Columns</button>
-                        <button className="btn btn-primary" onClick={function(){ setEditWine({}); setShowEdit(true); }}>+ Add Wine</button>
+                        <button className="btn btn-secondary btn-sm" onClick={function(){ setEditWine({}); setShowEdit(true); }}>+ Add</button>
                     </div>
                     <div className="card" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
                         {loading ? <div className="loading">Loading wines</div> : wines.length === 0 ? <div className="empty">No wines found</div> : (
@@ -841,12 +955,12 @@
                                                 {visibleCols.map(function(col) {
                                                     return (
                                                         <td key={col.key} style={{ maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                            {formatCell(wine[col.key], col.format)}
-                                                        </td>
+                                                            {formatCell(wine[col.key], col.format)}</td>
                                                     );
                                                 })}
-                                                <td onClick={function(e){ e.stopPropagation(); }}>
-                                                    <button className="btn btn-sm btn-primary" onClick={function(){ setEditWine(wine); setShowEdit(true); }}>Edit</button>
+                                                <td onClick={function(e){ e.stopPropagation(); }} style={{ whiteSpace: 'nowrap' }}>
+                                                    <button className="btn btn-sm btn-secondary" onClick={function(){ setEditWine(wine); setShowEdit(true); }} style={{ marginRight: 4 }}>Edit</button>
+                                                    <button className="btn btn-sm btn-danger" onClick={function(){ if (confirm('Delete this wine?')) { api('/wines/' + wine.id, { method: 'DELETE' }).then(function() { loadWines(); showToast('Wine deleted', 'success'); }).catch(function(e) { showToast(e.message, 'error'); }); } }}>Delete</button>
                                                 </td>
                                             </tr>
                                         );
@@ -857,14 +971,18 @@
                     </div>
                     {totalPages > 1 && (
                         <div className="pagination">
-                            <button className="page-btn" onClick={function(){ setPage(Math.max(1, page - 1)); }} disabled={page === 1}>Prev</button>
-                            <span style={{ color: '#8e8e93', fontSize: 12 }}>Page {page} of {totalPages}</span>
-                            <button className="page-btn" onClick={function(){ setPage(Math.min(totalPages, page + 1)); }} disabled={page === totalPages}>Next</button>
+                            <button className="page-btn" disabled={page === 1} onClick={function(){ setPage(page - 1); }}>Prev</button>
+                            {Array.from({length: totalPages}, function(_, i) { return i + 1; }).slice(Math.max(0, page - 2), Math.min(totalPages, page + 1)).map(function(p) {
+                                return (<button key={p} className="page-btn" onClick={function(){ setPage(p); }} style={{ background: p === page ? 'rgba(10,132,255,.2)' : '', color: p === page ? '#0a84ff' : '' }}>{p}</button>);
+                            })}
+                            <button className="page-btn" disabled={page === totalPages} onClick={function(){ setPage(page + 1); }}>Next</button>
                         </div>
                     )}
-                    {showColConfig && <ColumnConfigModal allColumns={ALL_COLUMNS} defaultVisible={DEFAULT_VISIBLE} storageKey="vinosomm_columns" config={colConfig} onSave={function(cfg){ setColConfig(cfg); saveColumnConfig(cfg, 'vinosomm_columns'); }} onClose={function(){ setShowColConfig(false); }} />}
-                    {showEdit && <WineEditModal wine={editWine && editWine.id ? editWine : null} onClose={function(){ setShowEdit(false); setEditWine(null); }} onSaved={function(){ setShowEdit(false); setEditWine(null); loadWines(); }} />}
-                    {detailWine && <WineDetailModal wine={detailWine} onClose={function(){ setDetailWine(null); }} onEdit={function(){ setEditWine(detailWine); setDetailWine(null); setShowEdit(true); }} onEnrich={function(){ showToast('Enrich not yet implemented', 'info'); }} />}
+
+                    {showColConfig && <ColumnConfigModal allColumns={ALL_COLUMNS} defaultVisible={DEFAULT_VISIBLE} storageKey="vinosomm_columns" config={colConfig} onSave={function(cfg) { setColConfig(cfg); saveColumnConfig(cfg, 'vinosomm_columns'); }} onClose={function(){ setShowColConfig(false); }} />}
+                    {showEdit && <WineEditModal wine={editWine} onClose={function(){ setShowEdit(false); }} onSaved={function() { setShowEdit(false); loadWines(); }} />}
+                    {detailWine && <WineDetailModal wine={detailWine} onClose={function(){ setDetailWine(null); }} onEdit={function(){ setDetailWine(null); setEditWine(detailWine); setShowEdit(true); }} onEnrich={function(){}} />}
+                    {showAiModal && aiData && <AiIntakeModal entityType="wine" detectedData={aiData} onClose={function(){ setShowAiModal(false); }} onConfirm={handleAiConfirmed} />}
                 </div>
             );
         }
@@ -890,6 +1008,10 @@
             const [showEdit, setShowEdit] = useState(false);
             const [editVineyard, setEditVineyard] = useState(null);
             const [detailVineyard, setDetailVineyard] = useState(null);
+            const [aiInput, setAiInput] = useState('');
+            const [aiLoading, setAiLoading] = useState(false);
+            const [aiData, setAiData] = useState(null);
+            const [showAiModal, setShowAiModal] = useState(false);
             const searchTimeout = useRef(null);
 
             const visibleCols = useMemo(function() {
@@ -923,16 +1045,38 @@
                 setPage(1);
             };
 
+            const handleAiDetect = function() {
+                if (!aiInput.trim()) { showToast('Enter vineyard name or URL', 'error'); return; }
+                setAiLoading(true);
+                api('/ai-intake', { method: 'POST', body: JSON.stringify({ input: aiInput, entity_type: 'vineyard' }) })
+                    .then(function(data) {
+                        setAiData(data);
+                        setShowAiModal(true);
+                    })
+                    .catch(function(e) { showToast(e.message, 'error'); })
+                    .finally(function() { setAiLoading(false); });
+            };
+
+            const handleAiConfirmed = function() {
+                setShowAiModal(false);
+                setAiInput('');
+                setAiData(null);
+                loadVineyards();
+            };
+
             return (
                 <div>
                     <div style={{ marginBottom: 20 }}><h1 className="page-title">Vineyards</h1><div className="page-sub">Manage vineyard catalog</div></div>
                     <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-                        <input className="input" style={{ flex: 1, minWidth: 200 }} placeholder="Search vineyards..." value={search} onChange={function(e){ handleSearch(e.target.value); }} />
+                        <div className="ai-intake-input-group" style={{ flex: 1, minWidth: 250 }}>
+                            <input className="input ai-intake-input" placeholder="Type vineyard name or paste URL..." value={aiInput} onChange={function(e){ setAiInput(e.target.value); }} />
+                            <button className="btn btn-primary" onClick={handleAiDetect} disabled={aiLoading}>{aiLoading ? 'Detecting\u2026' : 'Detect'}</button>
+                        </div>
                         <select className="input" style={{ width: 150 }} value={countryFilter} onChange={function(e){ setCountryFilter(e.target.value); setPage(1); }}><option value="">All Countries</option><option value="France">France</option><option value="Italy">Italy</option><option value="Spain">Spain</option><option value="USA">USA</option></select>
                         <select className="input" style={{ width: 150 }} value={regionFilter} onChange={function(e){ setRegionFilter(e.target.value); setPage(1); }}><option value="">All Regions</option><option value="Bordeaux">Bordeaux</option><option value="Burgundy">Burgundy</option><option value="Napa">Napa</option></select>
                         <select className="input" style={{ width: 150 }} value={typeFilter} onChange={function(e){ setTypeFilter(e.target.value); setPage(1); }}><option value="">All Types</option><option value="Chateau">Chateau</option><option value="Winery">Winery</option><option value="Cooperative">Cooperative</option></select>
                         <button className="btn btn-secondary" onClick={function(){ setShowColConfig(true); }}>Columns</button>
-                        <button className="btn btn-primary" onClick={function(){ setEditVineyard({}); setShowEdit(true); }}>+ Add Vineyard</button>
+                        <button className="btn btn-secondary btn-sm" onClick={function(){ setEditVineyard({}); setShowEdit(true); }}>+ Add</button>
                     </div>
                     <div className="card" style={{ overflow: 'auto', maxHeight: 'calc(100vh - 300px)' }}>
                         {loading ? <div className="loading">Loading vineyards</div> : vineyards.length === 0 ? <div className="empty">No vineyards found</div> : (
@@ -956,12 +1100,12 @@
                                                 {visibleCols.map(function(col) {
                                                     return (
                                                         <td key={col.key} style={{ maxWidth: col.width, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                            {formatCell(vineyard[col.key], col.format)}
-                                                        </td>
+                                                            {formatCell(vineyard[col.key], col.format)}</td>
                                                     );
                                                 })}
-                                                <td onClick={function(e){ e.stopPropagation(); }}>
-                                                    <button className="btn btn-sm btn-primary" onClick={function(){ setEditVineyard(vineyard); setShowEdit(true); }}>Edit</button>
+                                                <td onClick={function(e){ e.stopPropagation(); }} style={{ whiteSpace: 'nowrap' }}>
+                                                    <button className="btn btn-sm btn-secondary" onClick={function(){ setEditVineyard(vineyard); setShowEdit(true); }} style={{ marginRight: 4 }}>Edit</button>
+                                                    <button className="btn btn-sm btn-danger" onClick={function(){ if (confirm('Delete this vineyard?')) { api('/vineyards/' + vineyard.id, { method: 'DELETE' }).then(function() { loadVineyards(); showToast('Vineyard deleted', 'success'); }).catch(function(e) { showToast(e.message, 'error'); }); } }}>Delete</button>
                                                 </td>
                                             </tr>
                                         );
@@ -972,64 +1116,18 @@
                     </div>
                     {totalPages > 1 && (
                         <div className="pagination">
-                            <button className="page-btn" onClick={function(){ setPage(Math.max(1, page - 1)); }} disabled={page === 1}>Prev</button>
-                            <span style={{ color: '#8e8e93', fontSize: 12 }}>Page {page} of {totalPages}</span>
-                            <button className="page-btn" onClick={function(){ setPage(Math.min(totalPages, page + 1)); }} disabled={page === totalPages}>Next</button>
+                            <button className="page-btn" disabled={page === 1} onClick={function(){ setPage(page - 1); }}>Prev</button>
+                            {Array.from({length: totalPages}, function(_, i) { return i + 1; }).slice(Math.max(0, page - 2), Math.min(totalPages, page + 1)).map(function(p) {
+                                return (<button key={p} className="page-btn" onClick={function(){ setPage(p); }} style={{ background: p === page ? 'rgba(10,132,255,.2)' : '', color: p === page ? '#0a84ff' : '' }}>{p}</button>);
+                            })}
+                            <button className="page-btn" disabled={page === totalPages} onClick={function(){ setPage(page + 1); }}>Next</button>
                         </div>
                     )}
-                    {showColConfig && <ColumnConfigModal allColumns={ALL_VINEYARD_COLUMNS} defaultVisible={DEFAULT_VINEYARD_VISIBLE} storageKey="vinosomm_vineyard_columns" config={colConfig} onSave={function(cfg){ setColConfig(cfg); saveColumnConfig(cfg, 'vinosomm_vineyard_columns'); }} onClose={function(){ setShowColConfig(false); }} />}
-                    {showEdit && <VineyardEditModal vineyard={editVineyard && editVineyard.id ? editVineyard : null} onClose={function(){ setShowEdit(false); setEditVineyard(null); }} onSaved={function(){ setShowEdit(false); setEditVineyard(null); loadVineyards(); }} />}
-                    {detailVineyard && <VineyardDetailModal vineyard={detailVineyard} onClose={function(){ setDetailVineyard(null); }} onEdit={function(){ setEditVineyard(detailVineyard); setDetailVineyard(null); setShowEdit(true); }} />}
-                </div>
-            );
-        }
 
-        // ============================================================
-        // DASHBOARD PAGE
-        // ============================================================
-        function DashboardPage() {
-            const [data, setData] = useState(null);
-            const [loading, setLoading] = useState(true);
-            useEffect(function() {
-                api('/dashboard').then(setData).catch(function(e) { showToast(e.message, 'error'); }).finally(function() { setLoading(false); });
-            }, []);
-            if (loading) return <div className="loading">Loading dashboard</div>;
-            if (!data) return <div className="empty">Failed to load dashboard</div>;
-            const typeData = Object.entries(data.wines_by_type || {}).map(function(entry) { return { name: entry[0], value: entry[1] }; });
-            const countryData = Object.entries(data.wines_by_country || {}).map(function(entry) { return { name: entry[0], value: entry[1] }; });
-            const vineyardCountryData = Object.entries(data.vineyards_by_country || {}).map(function(entry) { return { name: entry[0], value: entry[1] }; });
-            return (
-                <div>
-                    <div style={{ marginBottom: 20 }}><h1 className="page-title">Dashboard</h1><div className="page-sub">Welcome back to vinosomm.ai Admin</div></div>
-                    <div className="grid-stats">
-                        <StatCard label="Total Wines" value={data.total_wines} change={'+' + data.wines_added_this_week + ' this week'} changeType="positive" />
-                        <StatCard label="Total Vineyards" value={data.total_vineyards} change={'+' + (data.vineyards_added_this_week || 0) + ' this week'} changeType="positive" />
-                        <StatCard label="Avg Completeness" value={(data.avg_completeness || 0).toFixed(1) + '%'} />
-                        <StatCard label="Needs Review" value={data.needs_review} changeType={data.needs_review > 0 ? 'negative' : 'positive'} change={data.needs_review > 0 ? 'Attention needed' : 'All clear'} />
-                    </div>
-                    <div className="grid-stats" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
-                        <StatCard label="Tasks Queued" value={(data.task_stats && data.task_stats.queued) || 0} />
-                        <StatCard label="Tasks Running" value={(data.task_stats && data.task_stats.running) || 0} />
-                        <StatCard label="Tasks Done" value={(data.task_stats && data.task_stats.completed) || 0} />
-                        <StatCard label="Tasks Failed" value={(data.task_stats && data.task_stats.failed) || 0} />
-                    </div>
-                    <div className="grid-2" style={{ marginBottom: 16 }}>
-                        <div className="card"><div className="section-title">Wines by Type</div>
-                            {typeData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><PieChart><Pie data={typeData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={function(e){ return e.name + ' ' + (e.percent*100).toFixed(0) + '%'; }} labelLine={false} fontSize={11}>{typeData.map(function(_, i){ return <Cell key={i} fill={COLORS[i % COLORS.length]} />; })}</Pie><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /></PieChart></ResponsiveContainer>) : <div className="empty">No data</div>}
-                        </div>
-                        <div className="card"><div className="section-title">Wines by Country</div>
-                            {countryData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><BarChart data={countryData} layout="vertical" margin={{ left: 60 }}><XAxis type="number" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis type="category" dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} width={55} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#0a84ff" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer>) : <div className="empty">No data</div>}
-                        </div>
-                    </div>
-                    <div className="grid-2" style={{ marginBottom: 16 }}>
-                        <div className="card"><div className="section-title">Vineyards by Country</div>
-                            {vineyardCountryData.length > 0 ? (<ResponsiveContainer width="100%" height={220}><BarChart data={vineyardCountryData} layout="vertical" margin={{ left: 60 }}><XAxis type="number" tick={{ fill: '#8e8e93', fontSize: 11 }} /><YAxis type="category" dataKey="name" tick={{ fill: '#8e8e93', fontSize: 11 }} width={55} /><Tooltip contentStyle={{ background: '#2c2c2e', border: 'none', borderRadius: 8, fontSize: 12 }} /><Bar dataKey="value" fill="#34d399" radius={[0, 4, 4, 0]} /></BarChart></ResponsiveContainer>) : <div className="empty">No data</div>}
-                        </div>
-                    </div>
-                    <div className="card"><div className="section-title">Recent Wines</div>
-                        <table><thead><tr><th>Name</th><th>Type</th><th>Country</th><th>Vintage</th><th>Completeness</th></tr></thead>
-                        <tbody>{(data.recent_wines || []).map(function(w){ return (<tr key={w.id}><td style={{ color: '#fff', fontWeight: 500 }}>{w.name}</td><td><span className="badge badge-blue">{w.wine_type}</span></td><td>{w.country}</td><td>{w.vintage}</td><td>{w.completeness != null ? w.completeness.toFixed(1) + '%' : '\u2014'}</td></tr>); })}</tbody></table>
-                    </div>
+                    {showColConfig && <ColumnConfigModal allColumns={ALL_VINEYARD_COLUMNS} defaultVisible={DEFAULT_VINEYARD_VISIBLE} storageKey="vinosomm_vineyard_columns" config={colConfig} onSave={function(cfg) { setColConfig(cfg); saveColumnConfig(cfg, 'vinosomm_vineyard_columns'); }} onClose={function(){ setShowColConfig(false); }} />}
+                    {showEdit && <VineyardEditModal vineyard={editVineyard} onClose={function(){ setShowEdit(false); }} onSaved={function() { setShowEdit(false); loadVineyards(); }} />}
+                    {detailVineyard && <VineyardDetailModal vineyard={detailVineyard} onClose={function(){ setDetailVineyard(null); }} onEdit={function(){ setDetailVineyard(null); setEditVineyard(detailVineyard); setShowEdit(true); }} />}
+                    {showAiModal && aiData && <AiIntakeModal entityType="vineyard" detectedData={aiData} onClose={function(){ setShowAiModal(false); }} onConfirm={handleAiConfirmed} />}
                 </div>
             );
         }
@@ -1037,44 +1135,45 @@
         // ============================================================
         // STUB PAGES
         // ============================================================
+        function DashboardPage() { return (<div><h1 className="page-title">Dashboard</h1><div className="page-sub">Coming soon</div></div>); }
         function TasksPage() { return (<div><h1 className="page-title">Enrichment Tasks</h1><div className="page-sub">Task management coming soon</div></div>); }
         function CrawlerPage() { return (<div><h1 className="page-title">Crawler</h1><div className="page-sub">Crawler management coming soon</div></div>); }
         function ReviewPage() { return (<div><h1 className="page-title">Review Queue</h1><div className="page-sub">Review queue coming soon</div></div>); }
         function ChatPage() { return (<div><h1 className="page-title">AI Chat</h1><div className="page-sub">AI chat coming soon</div></div>); }
         function AnalyticsPage() { return (<div><h1 className="page-title">Analytics</h1><div className="page-sub">Analytics coming soon</div></div>); }
         function SettingsPage() { return (<div><h1 className="page-title">Settings</h1><div className="page-sub">Settings coming soon</div></div>); }
-        function HealthPage() { return (<div><h1 className="page-title">Health</h1><div className="page-sub">Health monitoring coming soon</div></div>); }
+        function HealthPage() { return (<div><h1 className="page-title">System Health</h1><div className="page-sub">Health monitoring coming soon</div></div>); }
 
         // ============================================================
-        // NAVIGATION & APP
+        // MAIN APP
         // ============================================================
-        var NAV_ITEMS = [
-            { id: 'dashboard', label: 'Dashboard', icon: '\u25c9' },
+        const NAV_ITEMS = [
+            { id: 'dashboard', label: 'Dashboard', icon: '\ud83d\udcc8' },
             { id: 'wines', label: 'Wines', icon: '\ud83c\udf77' },
-            { id: 'vineyards', label: 'Vineyards', icon: '\ud83c\udfda' },
-            { id: 'tasks', label: 'Enrichment', icon: '\u26a1' },
+            { id: 'vineyards', label: 'Vineyards', icon: '\ud83c\udf3d' },
+            { id: 'tasks', label: 'Tasks', icon: '\ud83d\udccb' },
+            { id: 'review', label: 'Review', icon: '\u2705' },
             { id: 'crawler', label: 'Crawler', icon: '\ud83d\udd0d' },
-            { id: 'review', label: 'Review Queue', icon: '\u2713' },
-            { id: 'chat', label: 'AI Chat', icon: '\ud83d\udcac' },
-            { id: 'analytics', label: 'Analytics', icon: '\ud83d\udcca' },
-            { id: 'settings', label: 'Settings', icon: '\u2699' },
-            { id: 'health', label: 'Health', icon: '\u2665' }
+            { id: 'chat', label: 'Chat', icon: '\ud83d\udde3' },
+            { id: 'analytics', label: 'Analytics', icon: '\ud83d\udcc9' },
+            { id: 'health', label: 'Health', icon: '\ud83d\udcab' },
+            { id: 'settings', label: 'Settings', icon: '\u2699\ufe0f' },
         ];
 
         function App() {
-            const [loggedIn, setLoggedIn] = useState(!!authToken);
+            const [auth, setAuth] = useState(!!authToken);
             const [tab, setTab] = useState('dashboard');
-            useEffect(function() {
-                if (authToken) {
-                    api('/auth/me').catch(function() {
-                        authToken = null; localStorage.removeItem('vinosomm_token'); setLoggedIn(false);
-                    });
-                }
-            }, []);
-            if (!loggedIn) return <LoginScreen onLogin={function(){ setLoggedIn(true); }} />;
-            var logout = function() { authToken = null; localStorage.removeItem('vinosomm_token'); setLoggedIn(false); };
-            var pages = { dashboard: DashboardPage, wines: WinesPage, vineyards: VineyardsPage, tasks: TasksPage, crawler: CrawlerPage, review: ReviewPage, chat: ChatPage, analytics: AnalyticsPage, settings: SettingsPage, health: HealthPage };
-            var Page = pages[tab] || DashboardPage;
+
+            const logout = function() {
+                authToken = null;
+                localStorage.removeItem('vinosomm_token');
+                setAuth(false);
+            };
+
+            if (!auth) return <LoginScreen onLogin={function(){ setAuth(true); }} />;
+
+            const pages = { dashboard: DashboardPage, wines: WinesPage, vineyards: VineyardsPage, tasks: TasksPage, crawler: CrawlerPage, review: ReviewPage, chat: ChatPage, analytics: AnalyticsPage, settings: SettingsPage, health: HealthPage };
+            const Page = pages[tab] || DashboardPage;
             return (
                 <div style={{ display: 'flex', height: '100vh' }}>
                     <div style={{ width: 190, minWidth: 190, background: '#0c0c0c', borderRight: '1px solid rgba(255,255,255,.06)', display: 'flex', flexDirection: 'column' }}>
