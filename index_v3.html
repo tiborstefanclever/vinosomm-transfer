@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>vinosomm.ai Admin Panel</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000;
+            color: #e5e5ea;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .card {
+            background-color: #1c1c1e;
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card-lg {
+            background-color: #1c1c1e;
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .stat-card {
+            background-color: #1c1c1e;
+            border: none;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .nav-sidebar {
+            background-color: #0c0c0c;
+            border: none;
+            border-right: none;
+        }
+
+        .nav-item {
+            color: #8e8e93;
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin: 4px 12px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-item.active {
+            background-color: rgba(0, 122, 255, 0.2);
+            color: #0a84ff;
+        }
+
+        .section-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+        }
+
+        .wine-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .wine-table thead {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .wine-table th {
+            padding: 12px 8px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #a1a1a6;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .wine-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 13px;
+        }
+
+        .wine-table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background-color: rgba(52, 211, 153, 0.2);
+            color: #34d399;
+        }
+
+        .badge-warning {
+            background-color: rgba(251, 146, 60, 0.2);
+            color: #fb923c;
+        }
+
+        .badge-danger {
+            background-color: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .button-primary {
+            background-color: #0a84ff;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background-color: #0071e3;
+        }
+
+        .button-secondary {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .button-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .input-field {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .input-field::placeholder {
+            color: #8e8e93;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #0a84ff;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin: 8px 0;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #8e8e93;
+        }
+
+        .stat-change {
+            font-size: 12px;
+            margin-top: 6px;
+        }
+
+        .stat-change.positive {
+            color: #34d399;
+        }
+
+        .stat-change.negative {
+            color: #ef4444;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: flex-end;
+            z-index: 1000;
+        }
+
+        .modal {
+            background-color: #1c1c1e;
+            border-radius: 12px 12px 0 0;
+            padding: 20px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-close {
+            float: right;
+            background: none;
+            border: none;
+            color: #8e8e93;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .modal-header {
+            font-size: 17px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 16px;
+            clear: both;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #a1a1a6;
+            margin-bottom: 6px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 6px 12px;
+        }
+
+        .search-icon {
+            color: #8e8e93;
+            margin-right: 6px;
+        }
+
+        .search-input {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 13px;
+            width: 100%;
+        }
+
+        .search-input::placeholder {
+            color: #8e8e93;
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Mock data for wines
+        const mockWines = [
+            { id: 1, name: 'Château Margaux 2015', type: 'Bordeaux Blend', vintage: 2015, stock: 8, rating: 4.8, price: 450, status: 'in_stock' },
+            { id: 2, name: 'Barolo DOCG 2016', type: 'Nebbiolo', vintage: 2016, stock: 12, rating: 4.6, price: 85, status: 'in_stock' },
+            { id: 3, name: 'Brunello di Montalcino 2014', type: 'Sangiovese', vintage: 2014, stock: 5, rating: 4.7, price: 120, status: 'low_stock' },
+            { id: 4, name: 'Caymus Vineyards 2014', type: 'Cabernet Sauvignon', vintage: 2014, stock: 0, rating: 4.5, price: 200, status: 'out_of_stock' },
+            { id: 5, name: 'Sancerre 2022', type: 'Sauvignon Blanc', vintage: 2022, stock: 25, rating: 4.3, price: 35, status: 'in_stock' },
+            { id: 6, name: 'Riesling Kabinett 2021', type: 'Riesling', vintage: 2021, stock: 18, rating: 4.4, price: 28, status: 'in_stock' },
+            { id: 7, name: 'Chianti Classico DOCG 2018', type: 'Sangiovese', vintage: 2018, stock: 3, rating: 4.2, price: 45, status: 'low_stock' },
+            { id: 8, name: 'Champagne Krug 2008', type: 'Sparkling', vintage: 2008, stock: 6, rating: 4.9, price: 180, status: 'in_stock' },
+        ];
+
+        // Mock chart data
+        const chartData = [
+            { month: 'Jan', sales: 4000, orders: 24 },
+            { month: 'Feb', sales: 3000, orders: 18 },
+            { month: 'Mar', sales: 2000, orders: 15 },
+            { month: 'Apr', sales: 2780, orders: 22 },
+            { month: 'May', sales: 1890, orders: 19 },
+            { month: 'Jun', sales: 2390, orders: 25 },
+        ];
+
+        function AdminPanel() {
+            const [activeTab, setActiveTab] = useState('dashboard');
+            const [wines, setWines] = useState(mockWines);
+            const [showModal, setShowModal] = useState(false);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [formData, setFormData] = useState({
+                name: '',
+                type: '',
+                vintage: '',
+                stock: '',
+                price: '',
+            });
+
+            const filteredWines = wines.filter(wine =>
+                wine.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                wine.type.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            const handleAddWine = () => {
+                if (formData.name && formData.type && formData.vintage && formData.stock && formData.price) {
+                    const newWine = {
+                        id: wines.length + 1,
+                        ...formData,
+                        stock: parseInt(formData.stock),
+                        price: parseFloat(formData.price),
+                        vintage: parseInt(formData.vintage),
+                        rating: 4.5,
+                        status: parseInt(formData.stock) > 0 ? 'in_stock' : 'out_of_stock',
+                    };
+                    setWines([...wines, newWine]);
+                    setFormData({ name: '', type: '', vintage: '', stock: '', price: '' });
+                    setShowModal(false);
+                }
+            };
+
+            const getStatusBadge = (status) => {
+                switch(status) {
+                    case 'in_stock':
+                        return <span className="badge badge-success">In Stock</span>;
+                    case 'low_stock':
+                        return <span className="badge badge-warning">Low Stock</span>;
+                    case 'out_of_stock':
+                        return <span className="badge badge-danger">Out of Stock</span>;
+                    default:
+                        return null;
+                }
+            };
+
+            return (
+                <div style={{ display: 'flex', height: '100vh' }}>
+                    {/* Sidebar Navigation */}
+                    <div style={{ width: '200px', backgroundColor: '#0c0c0c', borderRight: '1px solid rgba(255,255,255,0.1)', overflowY: 'auto' }}>
+                        <div style={{ padding: '16px' }}>
+                            <div style={{ fontSize: '16px', fontWeight: '700', color: '#fff', marginBottom: '24px' }}>vinosomm.ai</div>
+                            <nav>
+                                {[
+                                    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+                                    { id: 'wines', label: 'Wine Inventory', icon: '🍷' },
+                                    { id: 'analytics', label: 'Analytics', icon: '📈' },
+                                    { id: 'settings', label: 'Settings', icon: '⚙️' },
+                                ].map(item => (
+                                    <div
+                                        key={item.id}
+                                        className="nav-item"
+                                        onClick={() => setActiveTab(item.id)}
+                                        style={{
+                                            backgroundColor: activeTab === item.id ? 'rgba(0, 122, 255, 0.2)' : 'transparent',
+                                            color: activeTab === item.id ? '#0a84ff' : '#8e8e93',
+                                        }}
+                                    >
+                                        <span style={{ marginRight: '8px' }}>{item.icon}</span>
+                                        {item.label}
+                                    </div>
+                                ))}
+                            </nav>
+                        </div>
+                    </div>
+
+                    {/* Main Content */}
+                    <div style={{ flex: 1, overflowY: 'auto', padding: '20px' }}>
+                        {/* Dashboard Tab */}
+                        {activeTab === 'dashboard' && (
+                            <div>
+                                <div className="header-section">
+                                    <div>
+                                        <h1 className="page-title">Dashboard</h1>
+                                        <p style={{ color: '#8e8e93', marginTop: '4px' }}>Welcome back to vinosomm.ai Admin</p>
+                                    </div>
+                                </div>
+
+                                {/* Stats Cards */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Total Wines</div>
+                                        <div className="stat-value">{wines.length}</div>
+                                        <div className="stat-change positive">↑ 12% from last month</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">In Stock</div>
+                                        <div className="stat-value">{wines.filter(w => w.status === 'in_stock').length}</div>
+                                        <div className="stat-change positive">↑ 8% this week</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Low Stock</div>
+                                        <div className="stat-value">{wines.filter(w => w.status === 'low_stock').length}</div>
+                                        <div className="stat-change negative">⚠️ Needs attention</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Total Value</div>
+                                        <div className="stat-value">${(wines.reduce((sum, w) => sum + (w.price * w.stock), 0)).toLocaleString()}</div>
+                                        <div className="stat-change positive">↑ Strong performance</div>
+                                    </div>
+                                </div>
+
+                                {/* Sales Chart */}
+                                <div className="card-lg" style={{ marginBottom: '24px' }}>
+                                    <h3 className="section-title">Sales Overview</h3>
+                                    <div className="chart-container">
+                                        <svg width="100%" height="200" style={{ maxWidth: '500px' }}>
+                                            <polyline
+                                                points="0,150 80,100 160,130 240,80 320,110 400,60"
+                                                fill="none"
+                                                stroke="#0a84ff"
+                                                strokeWidth="2"
+                                            />
+                                            <circle cx="0" cy="150" r="4" fill="#0a84ff" />
+                                            <circle cx="80" cy="100" r="4" fill="#0a84ff" />
+                                            <circle cx="160" cy="130" r="4" fill="#0a84ff" />
+                                            <circle cx="240" cy="80" r="4" fill="#0a84ff" />
+                                            <circle cx="320" cy="110" r="4" fill="#0a84ff" />
+                                            <circle cx="400" cy="60" r="4" fill="#0a84ff" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                {/* Recent Activity */}
+                                <div className="card-lg">
+                                    <h3 className="section-title">Recent Activity</h3>
+                                    <div style={{ color: '#8e8e93', fontSize: '13px' }}>
+                                        <p>✓ 5 new wines added</p>
+                                        <p>✓ 12 orders completed</p>
+                                        <p>✓ 3 inventory alerts</p>
+                                        <p>✓ System running smoothly</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Wine Inventory Tab */}
+                        {activeTab === 'wines' && (
+                            <div>
+                                <div className="header-section">
+                                    <div>
+                                        <h1 className="page-title">Wine Inventory</h1>
+                                        <p style={{ color: '#8e8e93', marginTop: '4px' }}>Manage your wine collection</p>
+                                    </div>
+                                    <button className="button button-primary" onClick={() => setShowModal(true)}>+ Add Wine</button>
+                                </div>
+
+                                {/* Search Box */}
+                                <div className="search-box" style={{ marginBottom: '16px', maxWidth: '300px' }}>
+                                    <span className="search-icon">🔍</span>
+                                    <input
+                                        type="text"
+                                        className="search-input"
+                                        placeholder="Search wines..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+
+                                {/* Wine Table */}
+                                <div className="card-lg">
+                                    <div className="table-scroll">
+                                        <table className="wine-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Wine Name</th>
+                                                    <th>Type</th>
+                                                    <th>Vintage</th>
+                                                    <th>Stock</th>
+                                                    <th>Price</th>
+                                                    <th>Rating</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredWines.map(wine => (
+                                                    <tr key={wine.id}>
+                                                        <td><strong>{wine.name}</strong></td>
+                                                        <td>{wine.type}</td>
+                                                        <td>{wine.vintage}</td>
+                                                        <td>{wine.stock}</td>
+                                                        <td>${wine.price.toFixed(2)}</td>
+                                                        <td>⭐ {wine.rating}</td>
+                                                        <td>{getStatusBadge(wine.status)}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Analytics Tab */}
+                        {activeTab === 'analytics' && (
+                            <div>
+                                <div className="header-section">
+                                    <div>
+                                        <h1 className="page-title">Analytics</h1>
+                                        <p style={{ color: '#8e8e93', marginTop: '4px' }}>Performance metrics and insights</p>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '12px', marginBottom: '24px' }}>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Avg. Order Value</div>
+                                        <div className="stat-value">$156.50</div>
+                                        <div className="stat-change positive">↑ 23% YoY</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Customer Satisfaction</div>
+                                        <div className="stat-value">4.7/5</div>
+                                        <div className="stat-change positive">↑ Excellent feedback</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Monthly Revenue</div>
+                                        <div className="stat-value">$45,230</div>
+                                        <div className="stat-change positive">↑ 18% MoM</div>
+                                    </div>
+                                    <div className="stat-card">
+                                        <div className="stat-label">Top Wine Category</div>
+                                        <div className="stat-value">Bordeaux</div>
+                                        <div className="stat-change positive">43% of sales</div>
+                                    </div>
+                                </div>
+
+                                <div className="card-lg">
+                                    <h3 className="section-title">Monthly Performance</h3>
+                                    <div className="chart-container">
+                                        <svg width="100%" height="200" style={{ maxWidth: '500px' }}>
+                                            <rect x="20" y="100" width="30" height="50" fill="#0a84ff" />
+                                            <rect x="70" y="120" width="30" height="30" fill="#0a84ff" />
+                                            <rect x="120" y="90" width="30" height="60" fill="#34d399" />
+                                            <rect x="170" y="70" width="30" height="80" fill="#0a84ff" />
+                                            <rect x="220" y="110" width="30" height="40" fill="#0a84ff" />
+                                            <rect x="270" y="60" width="30" height="90" fill="#34d399" />
+                                            <text x="35" y="160" fontSize="12" fill="#8e8e93" textAnchor="middle">Jan</text>
+                                            <text x="85" y="160" fontSize="12" fill="#8e8e93" textAnchor="middle">Feb</text>
+                                            <text x="135" y="160" fontSize="12" fill="#8e8e93" textAnchor="middle">Mar</text>
+                                            <text x="185" y="160" fontSize="12" fill="#8e8e93" textAnchor="middle">Apr</text>
+                                            <text x="235" y="160" fontSize="12" fill="#8e8e93" textAnchor="middle">May</text>
+                                            <text x="285" y="160" fontSize="12" fill="#8e8e93" textAnchor="middle">Jun</text>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Settings Tab */}
+                        {activeTab === 'settings' && (
+                            <div>
+                                <div className="header-section">
+                                    <div>
+                                        <h1 className="page-title">Settings</h1>
+                                        <p style={{ color: '#8e8e93', marginTop: '4px' }}>Manage your preferences</p>
+                                    </div>
+                                </div>
+
+                                <div className="card-lg" style={{ maxWidth: '500px' }}>
+                                    <h3 className="section-title">Account Settings</h3>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Email Address</label>
+                                        <input type="email" className="input-field" placeholder="admin@vinosomm.ai" style={{ width: '100%' }} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Business Name</label>
+                                        <input type="text" className="input-field" placeholder="vinosomm.ai" style={{ width: '100%' }} />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">Time Zone</label>
+                                        <select className="input-field" style={{ width: '100%' }}>
+                                            <option>Pacific Time (PT)</option>
+                                            <option>Eastern Time (ET)</option>
+                                            <option>Central Time (CT)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                                            <input type="checkbox" defaultChecked style={{ marginRight: '8px' }} />
+                                            <span className="form-label" style={{ margin: 0 }}>Enable notifications</span>
+                                        </label>
+                                    </div>
+
+                                    <button className="button button-primary" style={{ width: '100%', marginTop: '16px' }}>Save Changes</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Add Wine Modal */}
+                    {showModal && (
+                        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+                            <div className="modal" onClick={(e) => e.stopPropagation()}>
+                                <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+                                <div className="modal-header">Add New Wine</div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Wine Name</label>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        style={{ width: '100%' }}
+                                        placeholder="e.g., Château Margaux 2015"
+                                        value={formData.name}
+                                        onChange={(e) => setFormData({...formData, name: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Wine Type</label>
+                                    <input
+                                        type="text"
+                                        className="input-field"
+                                        style={{ width: '100%' }}
+                                        placeholder="e.g., Bordeaux Blend"
+                                        value={formData.type}
+                                        onChange={(e) => setFormData({...formData, type: e.target.value})}
+                                    />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Vintage</label>
+                                        <input
+                                            type="number"
+                                            className="input-field"
+                                            placeholder="2015"
+                                            value={formData.vintage}
+                                            onChange={(e) => setFormData({...formData, vintage: e.target.value})}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Stock</label>
+                                        <input
+                                            type="number"
+                                            className="input-field"
+                                            placeholder="10"
+                                            value={formData.stock}
+                                            onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Price ($)</label>
+                                    <input
+                                        type="number"
+                                        className="input-field"
+                                        style={{ width: '100%' }}
+                                        placeholder="450.00"
+                                        step="0.01"
+                                        value={formData.price}
+                                        onChange={(e) => setFormData({...formData, price: e.target.value})}
+                                    />
+                                </div>
+
+                                <button className="button button-primary" style={{ width: '100%', marginTop: '16px' }} onClick={handleAddWine}>Add Wine</button>
+                                <button className="button button-secondary" style={{ width: '100%', marginTop: '8px' }} onClick={() => setShowModal(false)}>Cancel</button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<AdminPanel />, document.getElementById('root'));
+    </script>
+</body>
+</html>
