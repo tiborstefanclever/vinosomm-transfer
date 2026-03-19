@@ -223,8 +223,8 @@ async def list_wines(
         if sort_by in ['rating', 'price']:
             wines = query.order_by(sort_column.desc())
         else:
-            wines = query.order_by(sort_column.asc())
-    
+            query = query.order_by(sort_column.asc())
+    wines = query.offset((page - 1) * per_page).limit(per_page).all()
     return {
         "wines": [wine_to_dict(w) for w in wines],
         "count": len(wines),
