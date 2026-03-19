@@ -200,34 +200,37 @@ async def list_wines(
     skip: int = Query(0),
     limit: int = Query(100),
     region: Optional[str] = Query(None),
-    needs_review: Optional[bool] = Query(None)
+    needs_review: Optional[bool] = Query(None),
+    page: int = Query(1),
+    per_page: int = Query(20),
+    sort_by: Optional[str] = Query(None)
 ):
-    """List wines with optional filters."""
+    """List wines with optional filters and pagination."""
     query = db.query(Wine)
     if region:
         query = query.filter(Wine.region.ilike(f"%{region}%"))
     if needs_review is not None:
         query = query.filter(Wine.needs_review == needs_review)
     
-    wines = query.offset(skip).limit(limit).all()
-    return [
-        {
-            "id": w.id,
-            "name": w.name,
-            "region": w.region,
-            "winery": w.winery,
-            "vintage": w.vintage,
-            "rating": w.rating,
-            "price": w.price,
-            "description": w.description,
-            "created_at": w.created_at.isoformat() if w.created_at else None,
-            "updated_at": w.updated_at.isoformat() if w.updated_at else None,
-            "data_source": w.data_source,
-            "needs_review": w.needs_review,
-            "review_notes": w.review_notes
-        }
-        for w in wines
-    ]
+    # Support old-style skip/limit and new-style pagination
+    if page and per_page:
+        wines = query.offset((page - 1) * per_page).limit(per_page).all()
+    else:
+        wines = query.offset(skip).limit(limit).all()
+    
+    if sort_by and sort_by in ['name', 'rating', 'price']:
+        sort_column = getattr(Wine, sort_by)
+        if sort_by in ['rating', 'price']:
+            wines = query.order_by(sort_column.desc())
+        else:
+            wines = query.order_by(sort_column.asc())
+    
+    return {
+        "wines": [wine_to_dict(w) for w in wines],
+        "count": len(wines),
+        "page": page,
+        "per_page": per_page
+    }
 
 @router.get("/wines/{wine_id}")
 async def get_wine(wine_id: int, db: Session = Depends(lambda: SessionLocal())):
@@ -236,21 +239,7 @@ async def get_wine(wine_id: int, db: Session = Depends(lambda: SessionLocal())):
     if not wine:
         raise HTTPException(status_code=404, detail="Wine not found")
     
-    return {
-        "id": wine.id,
-        "name": wine.name,
-        "region": wine.region,
-        "winery": wine.winery,
-        "vintage": wine.vintage,
-        "rating": wine.rating,
-        "price": wine.price,
-        "description": wine.description,
-        "created_at": wine.created_at.isoformat() if wine.created_at else None,
-        "updated_at": wine.updated_at.isoformat() if wine.updated_at else None,
-        "data_source": wine.data_source,
-        "needs_review": wine.needs_review,
-        "review_notes": wine.review_notes
-    }
+    return wine_to_dict(wine)
 
 @router.post("/wines")
 async def create_wine(
@@ -276,21 +265,7 @@ async def create_wine(
     db.commit()
     db.refresh(new_wine)
     
-    return {
-        "id": new_wine.id,
-        "name": new_wine.name,
-        "region": new_wine.region,
-        "winery": new_wine.winery,
-        "vintage": new_wine.vintage,
-        "rating": new_wine.rating,
-        "price": new_wine.price,
-        "description": new_wine.description,
-        "created_at": new_wine.created_at.isoformat() if new_wine.created_at else None,
-        "updated_at": new_wine.updated_at.isoformat() if new_wine.updated_at else None,
-        "data_source": new_wine.data_source,
-        "needs_review": new_wine.needs_review,
-        "review_notes": new_wine.review_notes
-    }
+    return wine_to_dict(new_wine)
 
 @router.put("/wines/{wine_id}")
 async def update_wine(
@@ -312,21 +287,7 @@ async def update_wine(
     db.commit()
     db.refresh(wine)
     
-    return {
-        "id": wine.id,
-        "name": wine.name,
-        "region": wine.region,
-        "winery": wine.winery,
-        "vintage": wine.vintage,
-        "rating": wine.rating,
-        "price": wine.price,
-        "description": wine.description,
-        "created_at": wine.created_at.isoformat() if wine.created_at else None,
-        "updated_at": wine.updated_at.isoformat() if wine.updated_at else None,
-        "data_source": wine.data_source,
-        "needs_review": wine.needs_review,
-        "review_notes": wine.review_notes
-    }
+    return wine_to_dict(wine)
 
 @router.delete("/wines/{wine_id}")
 async def delete_wine(
@@ -348,36 +309,26 @@ async def list_vineyards(
     db: Session = Depends(lambda: SessionLocal()),
     skip: int = Query(0),
     limit: int = Query(100),
-    region: Optional[str] = Query(None)
+    region: Optional[str] = Query(None),
+    page: int = Query(1),
+    per_page: int = Query(20)
 ):
-    """List vineyards with optional filters."""
+    """List vineyards with optional filters and pagination."""
     query = db.query(Vineyard)
     if region:
         query = query.filter(Vineyard.region.ilike(f"%{region}%"))
     
-    vineyards = query.offset(skip).limit(limit).all()
-    return [
-        {
-            "id": v.id,
-            "name": v.name,
-            "region": v.region,
-            "winemaker": v.winemaker,
-            "location_lat": v.location_lat,
-            "location_lon": v.location_lon,
-            "founded_year": v.founded_year,
-            "description": v.description,
-            "website_url": v.website_url,
-            "instagram_url": v.instagram_url,
-            "facebook_url": v.facebook_url,
-            "twitter_url": v.twitter_url,
-            "created_at": v.created_at.isoformat() if v.created_at else None,
-            "updated_at": v.updated_at.isoformat() if v.updated_at else None,
-            "data_source": v.data_source,
-            "needs_review": v.needs_review,
-            "review_notes": v.review_notes
-        }
-        for v in vineyards
-    ]
+    if page and per_page:
+        vineyards = query.offset((page - 1) * per_page).limit(per_page).all()
+    else:
+        vineyards = query.offset(skip).limit(limit).all()
+    
+    return {
+        "vineyards": [vineyard_to_dict(v) for v in vineyards],
+        "count": len(vineyards),
+        "page": page,
+        "per_page": per_page
+    }
 
 @router.get("/vineyards/{vineyard_id}")
 async def get_vineyard(vineyard_id: int, db: Session = Depends(lambda: SessionLocal())):
@@ -386,25 +337,7 @@ async def get_vineyard(vineyard_id: int, db: Session = Depends(lambda: SessionLo
     if not vineyard:
         raise HTTPException(status_code=404, detail="Vineyard not found")
     
-    return {
-        "id": vineyard.id,
-        "name": vineyard.name,
-        "region": vineyard.region,
-        "winemaker": vineyard.winemaker,
-        "location_lat": vineyard.location_lat,
-        "location_lon": vineyard.location_lon,
-        "founded_year": vineyard.founded_year,
-        "description": vineyard.description,
-        "website_url": vineyard.website_url,
-        "instagram_url": vineyard.instagram_url,
-        "facebook_url": vineyard.facebook_url,
-        "twitter_url": vineyard.twitter_url,
-        "created_at": vineyard.created_at.isoformat() if vineyard.created_at else None,
-        "updated_at": vineyard.updated_at.isoformat() if vineyard.updated_at else None,
-        "data_source": vineyard.data_source,
-        "needs_review": vineyard.needs_review,
-        "review_notes": vineyard.review_notes
-    }
+    return vineyard_to_dict(vineyard)
 
 @router.post("/vineyards")
 async def create_vineyard(
@@ -433,25 +366,7 @@ async def create_vineyard(
     db.commit()
     db.refresh(new_vineyard)
     
-    return {
-        "id": new_vineyard.id,
-        "name": new_vineyard.name,
-        "region": new_vineyard.region,
-        "winemaker": new_vineyard.winemaker,
-        "location_lat": new_vineyard.location_lat,
-        "location_lon": new_vineyard.location_lon,
-        "founded_year": new_vineyard.founded_year,
-        "description": new_vineyard.description,
-        "website_url": new_vineyard.website_url,
-        "instagram_url": new_vineyard.instagram_url,
-        "facebook_url": new_vineyard.facebook_url,
-        "twitter_url": new_vineyard.twitter_url,
-        "created_at": new_vineyard.created_at.isoformat() if new_vineyard.created_at else None,
-        "updated_at": new_vineyard.updated_at.isoformat() if new_vineyard.updated_at else None,
-        "data_source": new_vineyard.data_source,
-        "needs_review": new_vineyard.needs_review,
-        "review_notes": new_vineyard.review_notes
-    }
+    return vineyard_to_dict(new_vineyard)
 
 @router.put("/vineyards/{vineyard_id}")
 async def update_vineyard(
@@ -473,6 +388,44 @@ async def update_vineyard(
     db.commit()
     db.refresh(vineyard)
     
+    return vineyard_to_dict(vineyard)
+
+@router.delete("/vineyards/{vineyard_id}")
+async def delete_vineyard(
+    vineyard_id: int,
+    db: Session = Depends(lambda: SessionLocal()),
+    user_id: str = Depends(require_admin)
+):
+    """Delete a vineyard (admin only)."""
+    vineyard = db.query(Vineyard).filter(Vineyard.id == vineyard_id).first()
+    if not vineyard:
+        raise HTTPException(status_code=404, detail="Vineyard not found")
+    
+    db.delete(vineyard)
+    db.commit()
+    return {"deleted": True, "id": vineyard_id}
+
+# Helper functions
+def wine_to_dict(wine: Wine) -> Dict[str, Any]:
+    """Convert a Wine object to a dictionary."""
+    return {
+        "id": wine.id,
+        "name": wine.name,
+        "region": wine.region,
+        "winery": wine.winery,
+        "vintage": wine.vintage,
+        "rating": wine.rating,
+        "price": wine.price,
+        "description": wine.description,
+        "created_at": wine.created_at.isoformat() if wine.created_at else None,
+        "updated_at": wine.updated_at.isoformat() if wine.updated_at else None,
+        "data_source": wine.data_source,
+        "needs_review": wine.needs_review,
+        "review_notes": wine.review_notes
+    }
+
+def vineyard_to_dict(vineyard: Vineyard) -> Dict[str, Any]:
+    """Convert a Vineyard object to a dictionary."""
     return {
         "id": vineyard.id,
         "name": vineyard.name,
@@ -493,20 +446,10 @@ async def update_vineyard(
         "review_notes": vineyard.review_notes
     }
 
-@router.delete("/vineyards/{vineyard_id}")
-async def delete_vineyard(
-    vineyard_id: int,
-    db: Session = Depends(lambda: SessionLocal()),
-    user_id: str = Depends(require_admin)
-):
-    """Delete a vineyard (admin only)."""
-    vineyard = db.query(Vineyard).filter(Vineyard.id == vineyard_id).first()
-    if not vineyard:
-        raise HTTPException(status_code=404, detail="Vineyard not found")
-    
-    db.delete(vineyard)
-    db.commit()
-    return {"deleted": True, "id": vineyard_id}
+# Pagination helper
+def paginate(query, page: int = 1, per_page: int = 20):
+    """Paginate a SQLAlchemy query."""
+    return query.offset((page - 1) * per_page).limit(per_page).all()
 
 @router.post("/enrichment/task")
 async def create_enrichment_task(
@@ -644,4 +587,185 @@ async def chat_health():
     except ImportError:
         health["services"]["celery"] = {"status": "unavailable", "error": "Celery not imported"}
     
+    return health
+
+# Additional endpoints for advanced functionality
+
+def get_db():
+    """Get database session."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+def _get_current_user(authorization: Optional[str]):
+    """Extract and verify current user from JWT."""
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid authorization")
+    
+    token = authorization[7:]
+    user_id = _verify_jwt(token)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    return user_id
+
+# Batch operations for intake
+class Task(Base):
+    __tablename__ = 'tasks'
+    id = Column(Integer, primary_key=True)
+    task_type = Column(String(100))
+    wine_id = Column(Integer)
+    wine_name = Column(String(255))
+    status = Column(String(50), default="queued")
+    celery_task_id = Column(String(255))
+    error = Column(Text)
+    started_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+CELERY_AVAILABLE = False
+celery_app = None
+try:
+    from celery import Celery
+    celery_app = Celery('vinosomm', broker=REDIS_URL, backend=REDIS_URL)
+    CELERY_AVAILABLE = True
+except ImportError:
+    pass
+
+@router.post("/intake/batch")
+async def batch_intake(
+    entity_type: str = Body(...),  # "wine" or "vineyard"
+    items: List[Dict[str, Any]] = Body(...),
+    authorization: Optional[str] = Header(None),
+    db: Session = Depends(get_db)
+):
+    """Batch create wines or vineyards from structured data."""
+    _get_current_user(authorization)
+    
+    created = []
+    tasks_created = []
+    
+    for item in items:
+        item_name = item["name"]
+        website_url = item.get("website_url")
+        if not item_name:
+            continue
+
+        if entity_type == "vineyard":
+            entity = Vineyard(
+                name=item_name,
+                website_url=website_url,
+                data_method="ai-intake",
+                enrichment_status="queued",
+                needs_review=True
+            )
+            db.add(entity)
+            db.flush()
+
+            task = Task(
+                task_type="enrich_vineyard",
+                wine_id=entity.id,
+                wine_name=item_name,
+                status="queued"
+            )
+            db.add(task)
+            db.flush()
+
+            if CELERY_AVAILABLE and celery_app:
+                try:
+                    result = celery_app.send_task('tasks.enrich_vineyard', args=[entity.id])
+                    task.celery_task_id = result.id
+                    task.status = "running"
+                    task.started_at = datetime.utcnow()
+                    entity.enrichment_status = "enriching"
+                except Exception as e:
+                    task.status = "failed"
+                    task.error = str(e)
+                    entity.enrichment_status = "failed"
+
+            created.append({"id": entity.id, "name": item_name, "type": "vineyard", "enrichment_status": entity.enrichment_status})
+            tasks_created.append({"task_id": task.id, "status": task.status})
+
+        else:  # wine
+            entity = Wine(name=item_name, wine_type="unknown", data_method="ai-intake", needs_review=True)
+            db.add(entity)
+            db.flush()
+
+            task = Task(
+                task_type="enrich",
+                wine_id=entity.id,
+                wine_name=item_name,
+                status="queued"
+            )
+            db.add(task)
+            db.flush()
+
+            if CELERY_AVAILABLE and celery_app:
+                try:
+                    result = celery_app.send_task('tasks.enrich_wine', args=[entity.id])
+                    task.celery_task_id = result.id
+                    task.status = "running"
+                    task.started_at = datetime.utcnow()
+                except Exception as e:
+                    task.status = "failed"
+                    task.error = str(e)
+
+            created.append({"id": entity.id, "name": item_name, "type": "wine"})
+            tasks_created.append({"task_id": task.id, "status": task.status})
+
+    db.commit()
+
+    return {
+        "status": "ok",
+        "created": created,
+        "tasks": tasks_created,
+        "total_created": len(created),
+        "message": f"Created {len(created)} {entity_type}(s) with enrichment tasks dispatched"
+    }
+
+
+# ============================================================================
+# SYSTEM HEALTH
+# ============================================================================
+@router.get("/system/health")
+async def system_health(authorization: Optional[str] = Header(None), db: Session = Depends(get_db)):
+    _get_current_user(authorization)
+    health = {"status": "healthy", "timestamp": datetime.utcnow().isoformat(), "services": {}}
+    try:
+        db.execute(text("SELECT 1"))
+        health["services"]["postgres"] = {"status": "connected"}
+    except Exception as e:
+        health["services"]["postgres"] = {"status": "error", "error": str(e)}
+        health["status"] = "degraded"
+    try:
+        import redis
+        redis_client = redis.Redis.from_url(REDIS_URL, decode_responses=True, socket_connect_timeout=2)
+        redis_client.ping()
+        health["services"]["redis"] = {"status": "connected"}
+    except Exception as e:
+        health["services"]["redis"] = {"status": "unavailable", "error": str(e)}
+    try:
+        req = urllib.request.Request(f"{OLLAMA_URL}/api/tags")
+        with urllib.request.urlopen(req, timeout=5) as response:
+            data = json.loads(response.read().decode())
+            model_count = len(data.get("models", []))
+            health["services"]["ollama"] = {"status": "connected", "models": model_count}
+    except Exception as e:
+        health["services"]["ollama"] = {"status": "unavailable", "error": str(e)}
+    try:
+        req = urllib.request.Request(os.getenv("SEARXNG_URL", "http://searxng:8080"))
+        with urllib.request.urlopen(req, timeout=3) as response:
+            health["services"]["searxng"] = {"status": "connected"}
+    except Exception as e:
+        health["services"]["searxng"] = {"status": "unavailable", "error": str(e)}
+    if CELERY_AVAILABLE and celery_app:
+        try:
+            inspect = celery_app.control.inspect(timeout=3)
+            active = inspect.active()
+            health["services"]["celery"] = {"status": "connected", "workers": len(active) if active else 0}
+        except Exception as e:
+            health["services"]["celery"] = {"status": "unavailable", "error": str(e)}
+    else:
+        health["services"]["celery"] = {"status": "unavailable", "error": "Celery not imported"}
     return health
