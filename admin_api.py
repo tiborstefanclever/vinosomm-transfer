@@ -68,39 +68,135 @@ class Wine(Base):
     __tablename__ = 'wines'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    region = Column(String(255))
-    winery = Column(String(255))
+    name = Column(String(500), nullable=False)
+    producer = Column(String(300))
     vintage = Column(Integer)
-    rating = Column(Float)
+    region = Column(String(300))
+    country = Column(String(100))
+    grape_variety = Column(String(300))
+    wine_type = Column(String(100))
+    classification = Column(String(500))
+    # WSET 9-axis scores
+    sweetness = Column(Float)
+    acidity = Column(Float)
+    tannin = Column(Float)
+    body = Column(Float)
+    alcohol_warmth = Column(Float)
+    effervescence = Column(Float)
+    flavor_intensity = Column(Float)
+    finish = Column(Float)
+    complexity = Column(Float)
+    # Aromas & notes
+    fruit_character = Column(Text)
+    secondary_aromas = Column(Text)
+    tertiary_notes = Column(Text)
+    # Additional data
+    residual_sugar = Column(Float)
+    alcohol = Column(Float)
     price = Column(Float)
-    description = Column(Text)
+    currency = Column(String(10))
+    rating = Column(Float)
+    data_method = Column(String(100))
+    source_list = Column(Text)
+    source_count = Column(Integer, default=0)
+    provenance_notes = Column(Text)
+    avg_confidence = Column(Float)
+    completeness = Column(Float)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    data_source = Column(String(100))  # "user" or "crawler"
     needs_review = Column(Boolean, default=False)
     review_notes = Column(Text)
+    winery_id = Column(Integer)
+    vineyard_id = Column(Integer)
+    bottle_image_url = Column(Text)
+    bottle_image_source_domain = Column(Text)
+    bottle_image_local = Column(Text)
+    bottle_image_original = Column(Text)
+    bottle_image_status = Column(Text, default='none')
+    bottle_image_error = Column(Text)
+    supabase_id = Column(Text)
+    description = Column(Text)
+    discovery_metadata = Column(Text)
+    bottle_image_candidates = Column(Text)
+    data_quality_level = Column(Integer, default=1)
+    view_count = Column(Integer, default=0)
+    field_confidence = Column(Text)  # JSONB in DB
 
 class Vineyard(Base):
-    __tablename__ = 'vineyards'
+    __tablename__ = 'wineries'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(255), nullable=False)
-    region = Column(String(255))
-    winemaker = Column(String(255))
-    location_lat = Column(Float)
-    location_lon = Column(Float)
-    founded_year = Column(Integer)
-    description = Column(Text)
+    name = Column(String(500))
+    short_name = Column(String(200))
+    country = Column(String(100))
+    region = Column(String(300))
+    sub_region = Column(String(300))
+    address = Column(Text)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    phone = Column(String(100))
+    email = Column(String(200))
     website_url = Column(String(500))
     instagram_url = Column(String(500))
     facebook_url = Column(String(500))
     twitter_url = Column(String(500))
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    data_source = Column(String(100))
-    needs_review = Column(Boolean, default=False)
+    producer_type = Column(String(100))
+    appellations = Column(Text)
+    grape_varieties = Column(Text)
+    wine_types = Column(Text)
+    founded_year = Column(Integer)
+    winemaker = Column(String(500))
+    owner = Column(String(300))
+    vineyard_hectares = Column(Float)
+    annual_production_bottles = Column(Integer)
+    annual_production_hl = Column(Float)
+    number_of_wines = Column(Integer)
+    price_range_min = Column(Float)
+    price_range_max = Column(Float)
+    export_markets = Column(Text)
+    quality_tier = Column(String(100))
+    avg_rating = Column(Float)
+    vivino_rating = Column(Float)
+    wine_searcher_avg = Column(Float)
+    jancis_robinson_rating = Column(Float)
+    robert_parker_rating = Column(Float)
+    rating_sources = Column(Text)
+    awards = Column(Text)
+    farming_practice = Column(String(100))
+    certifications = Column(Text)
+    soil_types = Column(Text)
+    climate = Column(String(200))
+    altitude_meters = Column(Float)
+    sustainability_notes = Column(Text)
+    description = Column(Text)
+    data_method = Column(String(100))
+    source_list = Column(Text)
+    source_count = Column(Integer)
+    avg_confidence = Column(Float)
+    completeness = Column(Float)
+    needs_review = Column(Boolean)
     review_notes = Column(Text)
+    created_at = Column(DateTime)
+    updated_at = Column(DateTime)
+    enrichment_status = Column(String(20), default='none')
+    last_enriched_at = Column(DateTime)
+    logo_url = Column(Text)
+    logo_source_domain = Column(Text)
+    logo_local = Column(Text)
+    logo_original = Column(Text)
+    logo_status = Column(Text, default='none')
+    supabase_id = Column(Text)
+    tasting_room = Column(Boolean, default=False)
+    restaurant = Column(Boolean, default=False)
+    accommodation = Column(Boolean, default=False)
+    tours_available = Column(Boolean, default=False)
+    wine_styles = Column(Text)
+    notable_wines = Column(Text)
+    discovery_metadata = Column(Text)
+    scene_url = Column(Text)
+    scene_source_domain = Column(Text)
+    scene_local = Column(Text)
+    scene_status = Column(String(50), default='none')
 
 Base.metadata.create_all(bind=engine)
 
@@ -413,39 +509,79 @@ def wine_to_dict(wine: Wine) -> Dict[str, Any]:
     return {
         "id": wine.id,
         "name": getattr(wine, 'name', None),
-        "region": getattr(wine, 'region', None),
-        "winery": getattr(wine, 'winery', None),
+        "producer": getattr(wine, 'producer', None),
         "vintage": getattr(wine, 'vintage', None),
-        "rating": getattr(wine, 'rating', None),
+        "region": getattr(wine, 'region', None),
+        "country": getattr(wine, 'country', None),
+        "grape_variety": getattr(wine, 'grape_variety', None),
+        "wine_type": getattr(wine, 'wine_type', None),
+        "classification": getattr(wine, 'classification', None),
+        "sweetness": getattr(wine, 'sweetness', None),
+        "acidity": getattr(wine, 'acidity', None),
+        "tannin": getattr(wine, 'tannin', None),
+        "body": getattr(wine, 'body', None),
+        "alcohol_warmth": getattr(wine, 'alcohol_warmth', None),
+        "effervescence": getattr(wine, 'effervescence', None),
+        "flavor_intensity": getattr(wine, 'flavor_intensity', None),
+        "finish": getattr(wine, 'finish', None),
+        "complexity": getattr(wine, 'complexity', None),
+        "fruit_character": getattr(wine, 'fruit_character', None),
+        "secondary_aromas": getattr(wine, 'secondary_aromas', None),
+        "tertiary_notes": getattr(wine, 'tertiary_notes', None),
+        "residual_sugar": getattr(wine, 'residual_sugar', None),
+        "alcohol": getattr(wine, 'alcohol', None),
         "price": getattr(wine, 'price', None),
+        "currency": getattr(wine, 'currency', None),
+        "rating": getattr(wine, 'rating', None),
+        "data_method": getattr(wine, 'data_method', None),
+        "completeness": getattr(wine, 'completeness', None),
         "description": getattr(wine, 'description', None),
+        "winery_id": getattr(wine, 'winery_id', None),
+        "vineyard_id": getattr(wine, 'vineyard_id', None),
+        "bottle_image_url": getattr(wine, 'bottle_image_url', None),
+        "data_quality_level": getattr(wine, 'data_quality_level', None),
         "created_at": created_at.isoformat() if created_at else None,
         "updated_at": updated_at.isoformat() if updated_at else None,
-        "data_source": getattr(wine, 'data_source', None),
         "needs_review": getattr(wine, 'needs_review', None),
         "review_notes": getattr(wine, 'review_notes', None),
     }
 
 def vineyard_to_dict(vineyard: Vineyard) -> Dict[str, Any]:
-    """Convert a Vineyard object to a dictionary."""
+    """Convert a Vineyard (winery) object to a dictionary."""
     created_at = getattr(vineyard, 'created_at', None)
     updated_at = getattr(vineyard, 'updated_at', None)
     return {
         "id": vineyard.id,
         "name": getattr(vineyard, 'name', None),
+        "short_name": getattr(vineyard, 'short_name', None),
+        "country": getattr(vineyard, 'country', None),
         "region": getattr(vineyard, 'region', None),
-        "winemaker": getattr(vineyard, 'winemaker', None),
-        "location_lat": getattr(vineyard, 'location_lat', None),
-        "location_lon": getattr(vineyard, 'location_lon', None),
-        "founded_year": getattr(vineyard, 'founded_year', None),
-        "description": getattr(vineyard, 'description', None),
+        "sub_region": getattr(vineyard, 'sub_region', None),
+        "latitude": getattr(vineyard, 'latitude', None),
+        "longitude": getattr(vineyard, 'longitude', None),
         "website_url": getattr(vineyard, 'website_url', None),
         "instagram_url": getattr(vineyard, 'instagram_url', None),
         "facebook_url": getattr(vineyard, 'facebook_url', None),
         "twitter_url": getattr(vineyard, 'twitter_url', None),
+        "producer_type": getattr(vineyard, 'producer_type', None),
+        "founded_year": getattr(vineyard, 'founded_year', None),
+        "winemaker": getattr(vineyard, 'winemaker', None),
+        "owner": getattr(vineyard, 'owner', None),
+        "vineyard_hectares": getattr(vineyard, 'vineyard_hectares', None),
+        "number_of_wines": getattr(vineyard, 'number_of_wines', None),
+        "quality_tier": getattr(vineyard, 'quality_tier', None),
+        "avg_rating": getattr(vineyard, 'avg_rating', None),
+        "farming_practice": getattr(vineyard, 'farming_practice', None),
+        "description": getattr(vineyard, 'description', None),
+        "data_method": getattr(vineyard, 'data_method', None),
+        "completeness": getattr(vineyard, 'completeness', None),
+        "enrichment_status": getattr(vineyard, 'enrichment_status', None),
+        "logo_url": getattr(vineyard, 'logo_url', None),
+        "tasting_room": getattr(vineyard, 'tasting_room', None),
+        "restaurant": getattr(vineyard, 'restaurant', None),
+        "tours_available": getattr(vineyard, 'tours_available', None),
         "created_at": created_at.isoformat() if created_at else None,
         "updated_at": updated_at.isoformat() if updated_at else None,
-        "data_source": getattr(vineyard, 'data_source', None),
         "needs_review": getattr(vineyard, 'needs_review', None),
         "review_notes": getattr(vineyard, 'review_notes', None),
     }
