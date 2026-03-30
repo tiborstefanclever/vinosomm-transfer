@@ -408,42 +408,46 @@ async def delete_vineyard(
 # Helper functions
 def wine_to_dict(wine: Wine) -> Dict[str, Any]:
     """Convert a Wine object to a dictionary."""
+    created_at = getattr(wine, 'created_at', None)
+    updated_at = getattr(wine, 'updated_at', None)
     return {
         "id": wine.id,
-        "name": wine.name,
-        "region": wine.region,
-        "winery": wine.winery,
-        "vintage": wine.vintage,
-        "rating": wine.rating,
-        "price": wine.price,
-        "description": wine.description,
-        "created_at": wine.created_at.isoformat() if wine.created_at else None,
-        "updated_at": wine.updated_at.isoformat() if wine.updated_at else None,
-        "data_source": wine.data_source,
-        "needs_review": wine.needs_review,
-        "review_notes": wine.review_notes
+        "name": getattr(wine, 'name', None),
+        "region": getattr(wine, 'region', None),
+        "winery": getattr(wine, 'winery', None),
+        "vintage": getattr(wine, 'vintage', None),
+        "rating": getattr(wine, 'rating', None),
+        "price": getattr(wine, 'price', None),
+        "description": getattr(wine, 'description', None),
+        "created_at": created_at.isoformat() if created_at else None,
+        "updated_at": updated_at.isoformat() if updated_at else None,
+        "data_source": getattr(wine, 'data_source', None),
+        "needs_review": getattr(wine, 'needs_review', None),
+        "review_notes": getattr(wine, 'review_notes', None),
     }
 
 def vineyard_to_dict(vineyard: Vineyard) -> Dict[str, Any]:
     """Convert a Vineyard object to a dictionary."""
+    created_at = getattr(vineyard, 'created_at', None)
+    updated_at = getattr(vineyard, 'updated_at', None)
     return {
         "id": vineyard.id,
-        "name": vineyard.name,
-        "region": vineyard.region,
-        "winemaker": vineyard.winemaker,
-        "location_lat": vineyard.location_lat,
-        "location_lon": vineyard.location_lon,
-        "founded_year": vineyard.founded_year,
-        "description": vineyard.description,
-        "website_url": vineyard.website_url,
-        "instagram_url": vineyard.instagram_url,
-        "facebook_url": vineyard.facebook_url,
-        "twitter_url": vineyard.twitter_url,
-        "created_at": vineyard.created_at.isoformat() if vineyard.created_at else None,
-        "updated_at": vineyard.updated_at.isoformat() if vineyard.updated_at else None,
-        "data_source": vineyard.data_source,
-        "needs_review": vineyard.needs_review,
-        "review_notes": vineyard.review_notes
+        "name": getattr(vineyard, 'name', None),
+        "region": getattr(vineyard, 'region', None),
+        "winemaker": getattr(vineyard, 'winemaker', None),
+        "location_lat": getattr(vineyard, 'location_lat', None),
+        "location_lon": getattr(vineyard, 'location_lon', None),
+        "founded_year": getattr(vineyard, 'founded_year', None),
+        "description": getattr(vineyard, 'description', None),
+        "website_url": getattr(vineyard, 'website_url', None),
+        "instagram_url": getattr(vineyard, 'instagram_url', None),
+        "facebook_url": getattr(vineyard, 'facebook_url', None),
+        "twitter_url": getattr(vineyard, 'twitter_url', None),
+        "created_at": created_at.isoformat() if created_at else None,
+        "updated_at": updated_at.isoformat() if updated_at else None,
+        "data_source": getattr(vineyard, 'data_source', None),
+        "needs_review": getattr(vineyard, 'needs_review', None),
+        "review_notes": getattr(vineyard, 'review_notes', None),
     }
 
 # Pagination helper
